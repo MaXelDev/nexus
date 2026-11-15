@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "TZ=Europe/Paris node --test src/*.test.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
