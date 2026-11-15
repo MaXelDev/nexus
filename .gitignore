@@ -9,7 +9,7 @@ config.toml
 assets/logo.*
 __pycache__/
 # personal working notes, kept local
-PROMPT-NEXUS.md
+PROMPT-NEXUS*.md
 SKILLS.md
 graphify-out/
 # local working notes (personal config details)
