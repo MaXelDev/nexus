@@ -378,6 +378,7 @@ function onPick(id: string, cmd: string) {
 
 async function boot() {
   render();
+  if (!("__TAURI_INTERNALS__" in window)) return preview();
   const a = await invoke<{ wallpaper: string | null; logo: string | null }>("appearance");
   if (a.wallpaper) $("wallpaper").style.backgroundImage = `url("${convertFileSrc(a.wallpaper)}")`;
   if (a.logo) { const img = $("logo") as HTMLImageElement; img.src = convertFileSrc(a.logo); img.hidden = false; }
@@ -392,4 +393,16 @@ async function boot() {
   // Launched with --toggle as first instance: the window is already visible before listeners exist.
   if (await getCurrentWindow().isVisible()) open();
 }
+/** Browser preview (no Tauri): demo data, for development and README screenshots. */
+async function preview() {
+  const { demo, demoBackground } = await import("./demo");
+  $("wallpaper").style.background = demoBackground;
+  $("wallpaper").style.filter = "none";
+  ({ notion, weather: wx, board, mails: mailboxes, claude: usage } = demo);
+  render();
+  renderApps(demo.apps);
+  renderCommands(demo.commands);
+  startClock();
+}
+
 boot();

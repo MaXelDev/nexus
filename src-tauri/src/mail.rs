@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn display_names() {
-        assert_eq!(display_name("Scolarité INSA <scol@insa-lyon.fr>"), "Scolarité INSA");
+        assert_eq!(display_name("Scolarité INSA <scol@example.org>"), "Scolarité INSA");
         assert_eq!(display_name("\"Doe, Jane\" <j@x.org>"), "Doe, Jane");
         assert_eq!(display_name("j@x.org"), "j@x.org");
     }

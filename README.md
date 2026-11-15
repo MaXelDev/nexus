@@ -1,0 +1,190 @@
+# NEXUS
+
+**Your day at a glance, one shortcut away.** A full-screen glass dashboard for Fedora GNOME that sleeps until you call it.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-8AB4F8)](LICENSE)
+[![Fedora 44](https://img.shields.io/badge/Fedora-44-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/workstation/)
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white)](https://v2.tauri.app/)
+
+![NEXUS showing demo data](docs/screenshot.png)
+
+*Screenshot with demo data. On open, the cards fly in from the screen edges; on close, they fly back out.*
+
+## Features
+
+- **Clock**: big time, date, 24-hour progress bar, ISO week.
+- **App launcher**: a 3×3 grid of your apps with their real theme icons.
+- **Command buttons**: open a WezTerm window running a command in your interactive shell. A button can depend on a path, such as a USB key, and turns on or off live as drives are mounted.
+- **Weather** from Open-Meteo, no key needed.
+- **Next departures**: real-time public transport. Lyon TCL is built in, and other networks can be added.
+- **Notion**: today's tasks, next exam with a countdown, and a health score ring.
+- **Mail**: Gmail labels and IMAP folders for "urgent" and "to do" mail, in tabs, read-only.
+- **Claude usage**: 5-hour session and weekly quotas of your Claude plan.
+- **Light on resources**: nothing refreshes while the dashboard is hidden. In our measurements it used about 150 MB of RAM and under 0.1 % CPU.
+- **Your secrets stay in the GNOME keyring**, never in a file.
+
+Every card is optional: remove its section from the config and it disappears.
+
+## Installation (Fedora 44)
+
+### 1. Build dependencies
+
+```bash
+sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
+  libappindicator-gtk3-devel librsvg2-devel libxdo-devel nodejs npm
+sudo dnf group install c-development
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust via rustup
+```
+
+Runtime tools are already on Fedora Workstation: `secret-tool` (libsecret), `gtk-launch` (GTK 3) and `xdg-open`. The command buttons use [WezTerm](https://wezfurlong.org/wezterm/).
+
+### 2. Build and install
+
+```bash
+git clone https://github.com/<you>/nexus && cd nexus
+npm install
+npm run tauri build
+sudo dnf install ./src-tauri/target/release/bundle/rpm/nexus-0.1.0-1.x86_64.rpm
+```
+
+### 3. Start with your session (hidden)
+
+```bash
+mkdir -p ~/.config/autostart
+cp packaging/nexus-autostart.desktop ~/.config/autostart/nexus.desktop
+```
+
+### 4. Keyboard shortcut (Super+D)
+
+Wayland apps cannot grab global shortcuts, so a GNOME custom shortcut runs `nexus --toggle`. A running NEXUS receives it and shows or hides itself.
+
+Super+D is GNOME's "show desktop" by default. Free it first, or pick another binding:
+
+```bash
+gsettings get org.gnome.desktop.wm.keybindings show-desktop   # check for a conflict
+gsettings set org.gnome.desktop.wm.keybindings show-desktop "[]"
+
+KEY=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/nexus/
+LIST=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+case "$LIST" in *"$KEY"*) ;; "@as []") LIST="['$KEY']" ;; *) LIST="${LIST%]}, '$KEY']" ;; esac
+gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$LIST"
+S=org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$KEY
+gsettings set $S name 'NEXUS'
+gsettings set $S command 'nexus --toggle'
+gsettings set $S binding '<Super>d'
+```
+
+Press **Escape** to close the dashboard. Launching an app or a command also closes it.
+
+## Configuration
+
+```bash
+mkdir -p ~/.config/nexus
+cp config.example.toml ~/.config/nexus/config.toml   # then edit it
+scripts/setup-secrets.sh                              # masked prompts, stored in the keyring
+scripts/check-secrets.sh                              # one test call per service: OK / ERREUR
+```
+
+[`config.example.toml`](config.example.toml) documents every key. Config changes apply the next time the dashboard opens; changing `[[apps]]` or `[appearance]` needs a restart of NEXUS.
+
+Secrets are stored with the attributes `service nexus key <name>`. To read one yourself, use `secret-tool lookup service nexus key notion_token`.
+
+### Notion
+
+1. Create an internal integration at <https://www.notion.so/profile/integrations> and copy its token. Store it with `scripts/setup-secrets.sh notion_token`.
+2. On each database, open the **•••** menu, then **Connections**, and add your integration.
+3. Under `[notion.tasks]` in the config, put the database id (the 32 hex characters in its URL) and your property names. They are case-sensitive.
+4. Optional `[notion.health]`: the average of a number or formula property over the last 7 days.
+
+### Gmail
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and enable the **Gmail API**.
+2. Set up the OAuth consent screen as an *External* app in testing mode, and add your address as a test user.
+3. Create an OAuth client of type **Desktop app**.
+4. Store the client id and secret with `scripts/setup-secrets.sh gmail_client_id gmail_client_secret`.
+5. Run `scripts/gmail-auth.py` once. It opens your browser, asks for read-only access, and stores the refresh token in the keyring.
+6. In the config, set the label names of your "urgent" and "to do" mail.
+
+### IMAP
+
+Add a `[[mail]]` box with `kind = "imap"`, the host, the port (993 for implicit TLS) and the folder names. Credentials go in the keyring as `<secret_prefix>_user` and `<secret_prefix>_password`. NEXUS opens folders read-only and never marks mail as read.
+
+### Public transport (Lyon TCL)
+
+1. Create a free account on [data.grandlyon.com](https://data.grandlyon.com/).
+2. Request access to the dataset **"Prochains passages du réseau TCL"**.
+3. Store your account with `scripts/setup-secrets.sh grandlyon_user grandlyon_password`.
+4. Find your stop ids, one per direction, in [`tcl_sytral.tclarret`](https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclarret/all.json).
+
+### Weather
+
+Open-Meteo needs no account. Set `latitude`, `longitude` and a place name under `[weather]`.
+
+### Claude usage
+
+The card reads the token Claude Code already stores in `~/.claude/.credentials.json` and never modifies it. It relies on an **undocumented** endpoint, so it may break; it then shows "Indisponible". The card is hidden when Claude Code is not installed.
+
+## Real blur with Blur My Shell
+
+Wayland does not let an app blur what is behind its window, so by default NEXUS draws your current wallpaper, blurred and darkened. For true blur of your open windows:
+
+1. Install the [Blur my Shell](https://extensions.gnome.org/extension/3193/blur-my-shell/) extension.
+2. Enable its **Applications** option for NEXUS.
+3. Set `wallpaper_blur = false` in the config.
+
+## Extending
+
+- **Add an app**: add an `[[apps]]` entry with `desktop` set to the `.desktop` file name without extension (`ls /usr/share/applications ~/.local/share/applications`).
+- **Add a command**: add a `[[commands]]` entry with `label`, `subtitle`, `command`, and optionally `cwd`, `requires_path` and `subtitle_unavailable`.
+- **Add a transport network**: in `src-tauri/src/transport.rs`, write a `fetch_<provider>` function that returns `Vec<Departure>` and add it to the `match` in `fetch`. Then set `provider = "<name>"` in the config.
+- **Add a mail provider**: add a variant to `MailKind` in `src-tauri/src/config.rs` and handle it in `src-tauri/src/mail.rs`.
+
+## Development
+
+```bash
+npm run tauri dev                          # window starts hidden
+src-tauri/target/debug/nexus --toggle      # show / hide it
+npm run dev                                # browser preview with demo data (no Tauri)
+npm test                                   # frontend unit tests
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+## Troubleshooting
+
+- **Blank or invisible window** (some GPU drivers): start NEXUS with `WEBKIT_DISABLE_DMABUF_RENDERER=1 nexus`.
+- **A card says "indisponible"**: run `scripts/check-secrets.sh`, and start NEXUS from a terminal to see the error.
+- **Keyring locked**: if you log in automatically, GNOME may not unlock the keyring, and cards that need secrets fail until you unlock it. Use the same password for the session and the keyring, or unlock it in Passwords and Keys (Seahorse).
+- **App greyed out in the launcher**: its `.desktop` file was not found. NEXUS logs the name it looked for.
+- **NEXUS shows in Alt+Tab**: GNOME on Wayland may ignore the "skip taskbar" hint.
+
+## Uninstall
+
+```bash
+sudo dnf remove nexus
+rm -f ~/.config/autostart/nexus.desktop
+rm -rf ~/.config/nexus ~/.local/share/io.github.nexus.dashboard
+for k in notion_token gmail_client_id gmail_client_secret gmail_refresh_token \
+         zmail_user zmail_password grandlyon_user grandlyon_password; do
+  secret-tool clear service nexus key "$k"
+done
+```
+
+If you created the Super+D shortcut, remove it in Settings → Keyboard → Custom Shortcuts.
+
+## Contributing
+
+Issues and pull requests are welcome. Keep changes small, keep every card optional, and never put personal values or secrets in the repository. Run `npm test` and `cargo test` before opening a pull request.
+
+## License
+
+[MIT](LICENSE)
+
+---
+
+### En bref (français)
+
+NEXUS est un tableau de bord plein écran pour Fedora GNOME (Wayland). Il reste caché et s'affiche avec un raccourci (`nexus --toggle`, par exemple sur Super+D).
+
+Il regroupe l'horloge, vos applications, des commandes WezTerm, la météo, les prochains passages des transports, Notion, vos mails Gmail et IMAP, et votre quota Claude.
+
+Les secrets restent dans le trousseau GNOME, et toute la configuration est dans `~/.config/nexus/config.toml`. Pour l'installation, suivez les étapes ci-dessus.

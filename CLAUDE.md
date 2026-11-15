@@ -5,7 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 NEXUS : dashboard plein écran Tauri v2 pour Fedora 44 (GNOME, Wayland). Spec complète : `PROMPT-NEXUS.md` (source de vérité, ne pas la recopier ici). Avancement et décisions : `docs/PROGRESS.md` — lire en premier après un `/clear`.
 
 ## État
-Étapes 1-7 faites (toutes les cartes sur données réelles). Prochaine : étape 8 (publication). (`src/demo.ts`).
+Étapes 1-8 faites. v0.1.0 prête, en attente utilisateur : nom du copyright (LICENSE), réécriture d'historique (auteur + docs/PROGRESS.md), tag, puis `gh repo create` seulement sur demande.
+Installé chez l'utilisateur sans sudo : `~/.local/bin/nexus` + `~/.config/autostart/nexus.desktop` (le .rpm est dans src-tauri/target/release/bundle/rpm/).
+Attention : dans le zsh de l'utilisateur, `install` est un alias de `sudo dnf install` (utiliser cp). (`src/demo.ts`).
 
 ## Stack
 - Backend Rust (Tauri v2, `tauri-plugin-single-instance`, secrets via `secret-tool` (src-tauri/src/secrets.rs)).
@@ -29,7 +31,7 @@ Rust est dans `~/.cargo/bin` (ajouter au PATH si besoin).
 - Build : `npm run tauri build` (→ .rpm) ; frontend seul : `npm run build`.
 - Tests : `cargo test --manifest-path src-tauri/Cargo.toml` (un test : ajouter son nom ; boîtes mail réelles : `live_mail -- --ignored --nocapture`) et `npm test` (helpers de `src/format.ts`).
 - Secrets : `NEXUS_IMAP_HOST=… scripts/check-secrets.sh`.
-- Captures sans Tauri : `firefox --headless --screenshot out.png --window-size=1920,1080 http://localhost:1420/` (Playwright n'a pas de navigateur).
+- Aperçu navigateur avec données de démo (`src/demo.ts`) : `npm run dev` ; capture : `firefox --headless --screenshot out.png --window-size=1920,1080 http://localhost:1420/` (Playwright n'a pas de navigateur).
 
 ## Comportement clé
 - Lancée cachée à l'ouverture de session ; `nexus --toggle` (raccourci GNOME créé par l'utilisateur lui-même) est relayé à l'instance existante par single-instance.
