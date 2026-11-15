@@ -6,6 +6,7 @@ mod config;
 mod launcher;
 mod mail;
 mod notion;
+mod relay;
 mod secrets;
 mod shortcut;
 mod transport;
@@ -147,7 +148,45 @@ fn open_url(url: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn claude_usage() -> Result<Option<claude_usage::Usage>, String> {
-    tauri::async_runtime::spawn_blocking(|| claude_usage::fetch().transpose()).await.map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(|| {
+        let usage = claude_usage::fetch().transpose()?;
+        // Forward to the relay for the phone; a relay problem never hides the PC card.
+        if let (Some(u), Some(r)) = (&usage, config::load().relay) {
+            if let Err(e) = relay::push_usage(&r, u) {
+                eprintln!("nexus: {e}");
+            }
+        }
+        Ok(usage)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Set by `nexus --pair` when it starts the first instance, before the page can listen.
+static PAIR_PENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[tauri::command]
+fn take_pair_request() -> bool {
+    PAIR_PENDING.swap(false, std::sync::atomic::Ordering::Relaxed)
+}
+
+/// One-time pairing code from the relay, as a QR. Called by the page on `nexus --pair`.
+#[tauri::command]
+async fn pair() -> Result<relay::PairQr, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let r = config::load().relay.ok_or("section [relay] absente de la config")?;
+        relay::pair(&r)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// `nexus --pair`: show the dashboard and ask the page to display a pairing QR.
+fn request_pair(win: &WebviewWindow) {
+    if !win.is_visible().unwrap_or(false) {
+        toggle(win);
+    }
+    let _ = win.emit("nx-pair", ());
 }
 
 /// Tell the frontend when a drive is (un)mounted, so path-dependent buttons update without polling.
@@ -164,18 +203,23 @@ fn main() {
     tauri::Builder::default()
         // Must be the first plugin: a second `nexus` process exits immediately and its argv lands here.
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
-            if argv.iter().any(|a| a == "--toggle") {
-                if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = app.get_webview_window("main") {
+                if argv.iter().any(|a| a == "--pair") {
+                    request_pair(&win);
+                } else if argv.iter().any(|a| a == "--toggle") {
                     toggle(&win);
                 }
             }
         }))
-        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url, claude_usage])
+        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url, claude_usage, pair, take_pair_request])
         .setup(|app| {
             watch_mounts(app.handle());
             shortcut::ensure(&config::load().shortcut);
             // First launch with --toggle (no instance running yet): show right away.
-            if std::env::args().any(|a| a == "--toggle") {
+            if std::env::args().any(|a| a == "--pair") {
+                PAIR_PENDING.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            if std::env::args().any(|a| a == "--toggle" || a == "--pair") {
                 if let Some(win) = app.get_webview_window("main") {
                     toggle(&win);
                 }

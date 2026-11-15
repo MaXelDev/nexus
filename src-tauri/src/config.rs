@@ -23,6 +23,8 @@ pub struct Config {
     pub notion: Option<NotionCfg>,
     /// One tab per box; empty = mail card hidden.
     pub mail: Vec<MailCfg>,
+    /// nexus-relay for the Android app. Missing = no quota push, no pairing.
+    pub relay: Option<RelayCfg>,
 }
 
 fn default_shortcut() -> String {
@@ -37,6 +39,12 @@ fn default_apps() -> Vec<AppEntry> {
     ]
     .map(|(name, desktop)| AppEntry { name: name.into(), desktop: desktop.into() })
     .into()
+}
+
+#[derive(Deserialize)]
+pub struct RelayCfg {
+    /// e.g. https://nexus-relay.<you>.workers.dev
+    pub url: String,
 }
 
 #[derive(Deserialize)]

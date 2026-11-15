@@ -359,7 +359,35 @@ function open() {
   timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY), setInterval(refreshMails, MAIL_EVERY), setInterval(refreshClaude, CLAUDE_EVERY)];
   play("normal");
 }
+// ---------- pairing (`nexus --pair`) ----------
+let pairTimer = 0;
+function endPair() {
+  clearInterval(pairTimer);
+  $("pair").hidden = true;
+  $("pair-qr").innerHTML = ""; // the code is useless after 60 s, but don't keep it around
+}
+async function startPair() {
+  endPair();
+  $("pair").hidden = false;
+  $("pair-msg").textContent = "Demande d'un code au relais…";
+  try {
+    const p = await invoke<{ svg: string; expires_in: number }>("pair");
+    $("pair-qr").innerHTML = p.svg; // SVG built by the backend's QR encoder, no outside markup
+    let left = p.expires_in;
+    const tick = () => {
+      if (left <= 0) return endPair();
+      $("pair-msg").textContent = `Scanne ce code avec NEXUS sur ton téléphone · ${left--} s`;
+    };
+    tick();
+    pairTimer = window.setInterval(tick, 1000);
+  } catch (err) {
+    $("pair-msg").textContent = `Appairage impossible : ${err}`;
+    pairTimer = window.setTimeout(endPair, 8000);
+  }
+}
+
 async function close() {
+  endPair();
   if (closing) return;
   closing = true;
   await play("reverse");
@@ -397,7 +425,10 @@ async function boot() {
   await listen("nx-mounts", refreshCommands);
   await listen("nx-open", open);
   await listen("nx-close", close);
-  addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  await listen("nx-pair", startPair);
+  // Escape closes the pairing panel first, then the dashboard.
+  addEventListener("keydown", (e) => { if (e.key === "Escape") ($("pair").hidden ? close() : endPair()); });
+  if (await invoke<boolean>("take_pair_request")) startPair();
   // Launched with --toggle as first instance: the window is already visible before listeners exist.
   if (await getCurrentWindow().isVisible()) open();
 }

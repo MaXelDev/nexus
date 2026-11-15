@@ -114,3 +114,10 @@ secret_prefix = "work" # keyring keys work_user / work_password
 urgent = "Urgent"      # folder names (sub-folders: "Parent/Child")
 todo = "To do"
 open_url = "https://webmail.example.org/"
+
+# ---------------------------------------------------------------------------
+# nexus-relay, for the Android app (relay/, docs/relay-api.md). With this section,
+# NEXUS PC pushes the Claude quota to the relay and `nexus --pair` shows a pairing QR.
+# Tokens: scripts/relay-setup.sh (GNOME keyring). Remove the section if you have no relay.
+# [relay]
+# url = "https://nexus-relay.<you>.workers.dev"

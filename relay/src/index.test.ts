@@ -7,6 +7,7 @@ import { text } from "./sources.ts";
 
 const DEVICE = "nxd_" + "A".repeat(43);
 const PUSH = "push-token-for-tests-0123456789";
+const ADMIN = "admin-token-for-tests-0123456789";
 const store = new Map<string, string>();
 let allow = true;
 
@@ -20,8 +21,14 @@ const config = {
 };
 
 const env = (over: Record<string, unknown> = {}) => ({
-  KV: { get: async (k: string, t?: string) => (store.has(k) ? (t === "json" ? JSON.parse(store.get(k)!) : store.get(k)) : null) },
+  KV: {
+    get: async (k: string, t?: string) => (store.has(k) ? (t === "json" ? JSON.parse(store.get(k)!) : store.get(k)) : null),
+    put: async (k: string, v: string) => void store.set(k, v),
+    delete: async (k: string) => void store.delete(k),
+  },
   RL: { limit: async () => ({ success: allow }) },
+  RL_PAIR: { limit: async () => ({ success: allow }) },
+  RL_PUSH: { limit: async () => ({ success: allow }) },
   INSA_MAIL: { counts: async () => ({ urgent: 2, a_traiter: 1 }) },
   NEXUS_CONFIG: JSON.stringify(config),
   PUSH_TOKEN_SHA256: "", ADMIN_TOKEN_SHA256: "",
@@ -135,4 +142,50 @@ test("Notion text reads title, select and status", () => {
   assert.equal(text(p, "T"), "TD 4");
   assert.equal(text(p, "S"), "NRP");
   assert.equal(text(p, "missing"), "");
+});
+
+const pcEnv = async () => env({ PUSH_TOKEN_SHA256: await sha256hex(PUSH), ADMIN_TOKEN_SHA256: await sha256hex(ADMIN) });
+const post = (path: string, body: unknown, token?: string, e?: any) =>
+  call(path, { method: "POST", body: JSON.stringify(body), headers: token ? { Authorization: `Bearer ${token}` } : {} }, e);
+
+test("claude-usage: push token only, validated, then served in the summary", async () => {
+  const e = await pcEnv();
+  const usage = { session: { pct: 42, resets_at: "2026-11-15T19:59:59+00:00" }, week: { pct: 63, resets_at: null } };
+  for (const t of [undefined, DEVICE, ADMIN]) assert.equal((await post("/v1/claude-usage", usage, t, e)).status, 401);
+  for (const bad of [{}, { session: { pct: "42" }, week: usage.week }, { ...usage, week: { pct: -1 } }, { ...usage, junk: "x".repeat(2000) }])
+    assert.equal((await post("/v1/claude-usage", bad, PUSH, e)).status, 400);
+  assert.equal((await post("/v1/claude-usage", usage, PUSH, e)).status, 204);
+  const s: any = await (await call("/v1/summary", auth(DEVICE), e)).json();
+  assert.deepEqual([s.claude.session.pct, s.claude.week.pct, typeof s.claude.updated_at], [42, 63, "string"]);
+});
+
+test("pairing: admin creates a one-time code, the phone trades it for a working token", async () => {
+  const e = await pcEnv();
+  for (const t of [undefined, DEVICE, PUSH]) assert.equal((await post("/v1/pair", {}, t, e)).status, 401);
+  const p = await post("/v1/pair", {}, ADMIN, e);
+  assert.equal(p.status, 201);
+  const { code, expires_in } = await p.json() as any;
+  assert.match(code, /^[A-Za-z0-9_-]{22}$/);
+  assert.equal(expires_in, 60);
+
+  assert.equal((await post("/v1/pair/claim", { code, device: "<script>" }, undefined, e)).status, 400);
+  const c = await post("/v1/pair/claim", { code, device: "Galaxy S22" }, undefined, e);
+  assert.equal(c.status, 201);
+  const { token, device } = await c.json() as any;
+  assert.match(token, /^nxd_[A-Za-z0-9_-]{43}$/);
+  assert.equal(device, "Galaxy S22");
+  assert.ok(![...store.values()].some((v) => v.includes(token)), "token never stored in clear");
+  assert.equal((await call("/v1/summary", auth(token), e)).status, 200);
+
+  assert.equal((await post("/v1/pair/claim", { code, device: "Other" }, undefined, e)).status, 401, "code is single-use");
+  assert.equal((await post("/v1/pair/claim", { code: "A".repeat(22), device: "X" }, undefined, e)).status, 401);
+});
+
+test("pairing: a taken name is 409 and leaves the code usable", async () => {
+  const e = await pcEnv();
+  const code1 = (await (await post("/v1/pair", {}, ADMIN, e)).json() as any).code;
+  await post("/v1/pair/claim", { code: code1, device: "S22" }, undefined, e);
+  const code2 = (await (await post("/v1/pair", {}, ADMIN, e)).json() as any).code;
+  assert.equal((await post("/v1/pair/claim", { code: code2, device: "S22" }, undefined, e)).status, 409);
+  assert.equal((await post("/v1/pair/claim", { code: code2, device: "S22 bis" }, undefined, e)).status, 201);
 });
