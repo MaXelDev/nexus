@@ -79,13 +79,13 @@ Corps `{"error": "<code>"}` : `bad_request` 400, `unauthorized` 401, `not_found`
 ## En-têtes
 Toutes les réponses : `Content-Type: application/json`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`. Aucun en-tête CORS ; `OPTIONS` → 405.
 
-## Limitation de débit (binding Rate Limiting, par clé)
-| Route | Clé | Limite |
-|---|---|---|
-| `/v1/summary` | hash du jeton | 30 / min |
-| `/v1/pair/claim` | IP | 5 / min |
-| `/v1/pair` | IP | 5 / min |
-| `/v1/claude-usage` | IP | 12 / min |
+## Limitation de débit (binding Rate Limiting)
+Par route et par IP, vérifiée **avant** toute lecture KV (le trafic parasite ne consomme pas le quota KV gratuit) ; le format du jeton appareil est aussi vérifié avant KV.
+| Route | Limite |
+|---|---|
+| `/v1/summary` | 30 / min |
+| `/v1/pair`, `/v1/pair/claim` | 5 / min (étape 4) |
+| `/v1/claude-usage` | 12 / min (étape 4) |
 
 ## Cache (mémoire de l'isolat, par section, partagé entre appareils)
 | Section | Durée |

@@ -1,0 +1,15 @@
+{
+  "name": "nexus-relay",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test src/*.test.ts",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261115.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.162.0"
+  }
+}

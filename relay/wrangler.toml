@@ -6,3 +6,20 @@ main = "src/index.ts"
 compatibility_date = "2026-11-12"
 workers_dev = true
 preview_urls = false
+
+# Device tokens (hashed), pairing codes, Claude quota. No id: wrangler creates it on first deploy.
+[[kv_namespaces]]
+binding = "KV"
+
+# Per-IP limit, checked before any KV read. Period is 10 or 60 s.
+[[ratelimits]]
+name = "RL"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+# Optional: IMAP folder counts from another Worker of yours exposing a `MailCounts` RPC
+# entrypoint with `counts() -> { urgent, a_traiter }`. Remove this block if you have none.
+[[services]]
+binding = "INSA_MAIL"
+service = "insa-mail-mcp"
+entrypoint = "MailCounts"
