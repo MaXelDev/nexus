@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 NEXUS : dashboard plein écran Tauri v2 pour Fedora 44 (GNOME, Wayland). Spec complète : `PROMPT-NEXUS.md` (source de vérité, ne pas la recopier ici). Avancement et décisions : `docs/PROGRESS.md` — lire en premier après un `/clear`.
 
 ## État
-v1.0.0 publiée sur https://github.com/MaXelDev/nexus (release avec le .rpm).
+v1.1.0 publiée sur https://github.com/MaXelDev/nexus (release avec le .rpm ; le .rpm suffit : autostart + raccourci créé au 1er lancement).
 Installé chez l’utilisateur via le .rpm (`/usr/bin/nexus`, autostart `~/.config/autostart/nexus.desktop`, raccourci Super+² → `nexus --toggle`).
 Attention : dans le zsh de l'utilisateur, `install` est un alias de `sudo dnf install` (utiliser cp). (`src/demo.ts`).
 
