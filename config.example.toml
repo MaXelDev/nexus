@@ -87,3 +87,24 @@ score = "Score"
 date = "Date"
 filter_property = "Status"
 filter_value = "Filled"
+
+# ---------------------------------------------------------------------------
+# Mail: one tab per [[mail]] box. Shows mail carrying the `urgent` / `todo`
+# Gmail label, or sitting in those IMAP folders (read-only, nothing marked read).
+[[mail]]
+name = "Gmail"
+label = "Gmail inbox"
+kind = "gmail"         # OAuth: scripts/setup-secrets.sh then scripts/gmail-auth.py
+urgent = "Urgent"      # label names
+todo = "To do"
+
+[[mail]]
+name = "Work"
+label = "Work inbox"
+kind = "imap"
+host = "imap.example.org"
+port = 993             # implicit TLS
+secret_prefix = "work" # keyring keys work_user / work_password
+urgent = "Urgent"      # folder names (sub-folders: "Parent/Child")
+todo = "To do"
+open_url = "https://webmail.example.org/"

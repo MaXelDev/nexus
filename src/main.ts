@@ -266,26 +266,57 @@ async function refreshBoard() {
   renderWeather(wx, board);
 }
 
-let activeBox = 1;
-function renderMails(d: Data["mails"]) {
+type Mailbox = { name: string; label: string; messages: { from: string; subject: string; urgent: boolean; url: string }[] | null };
+let mailboxes: Mailbox[] | undefined; // memory only: mail subjects are not written to disk
+let activeBox = -1; // -1 = not chosen yet: open the first box that has urgent mail
+
+function renderMails(d: Mailbox[] | undefined | string) {
+  const card = $("mails");
+  card.hidden = Array.isArray(d) && d.length === 0;
+  if (!Array.isArray(d)) {
+    card.innerHTML = `${head(ICON.mail, "Mails")}<div class="error">${d ? "Mails indisponibles" : "Chargement…"}</div>`;
+    return;
+  }
+  if (activeBox < 0 || activeBox >= d.length) activeBox = Math.max(0, d.findIndex((b) => b.messages?.some((m) => m.urgent)));
   const tabs = d.map((b, i) => `
     <button class="nx-btn tab" type="button" role="tab" aria-selected="${i === activeBox}" data-box="${i}">
-      ${esc(b.name)}<span class="count">${b.items.length}</span></button>`).join("");
+      ${esc(b.name)}<span class="count">${b.messages?.length ?? "!"}</span></button>`).join("");
   const box = d[activeBox];
-  const urgent = box.items.filter((m) => m.urgent).length;
-  const items = box.items.map((m) => `
-    <div class="nx-pill mail"><span class="dot${m.urgent ? " urgent" : ""}"></span>
-      <div class="mail-body"><div class="from">${esc(m.from)}</div><div class="subject">${esc(m.subject)}</div></div></div>`).join("");
-  $("mails").innerHTML = `
+  let body: string;
+  if (!box.messages) body = `<div class="error">Boîte indisponible</div>`;
+  else {
+    const urgent = box.messages.filter((m) => m.urgent).length;
+    const items = box.messages.map((m, i) => `
+      <button class="nx-pill nx-btn mail" type="button" data-mail="${i}"${m.url ? "" : " disabled"}><span class="dot${m.urgent ? " urgent" : ""}"></span>
+        <div class="mail-body"><div class="from">${esc(m.from)}</div><div class="subject">${esc(m.subject || "(sans objet)")}</div></div></button>`).join("");
+    body = `<div class="counters"><span class="box">${esc(box.label)}</span>
+        <span class="badge urgent">${urgent} urgent</span><span class="badge">${box.messages.length - urgent} à traiter</span></div>
+      ${items || `<div class="error">Rien à traiter</div>`}`;
+  }
+  card.innerHTML = `
     ${head(ICON.mail, "Mails", `<div class="tabs" role="tablist" aria-label="Boîtes mail">${tabs}</div>`)}
-    <div class="mail-list">
-      <div class="counters"><span class="box">${esc(box.label)}</span>
-        <span class="badge urgent">${urgent} urgent</span><span class="badge">${box.items.length - urgent} à traiter</span></div>
-      ${items}
-    </div>
+    <div class="mail-list">${body}</div>
     <div class="legend"><span><span class="dot urgent"></span>Urgent</span><span><span class="dot"></span>À traiter</span></div>`;
-  $("mails").querySelectorAll<HTMLElement>(".tab").forEach((t) =>
-    t.addEventListener("click", () => { activeBox = Number(t.dataset.box); renderMails(d); }));
+}
+
+$("mails").addEventListener("click", async (e) => {
+  const el = e.target as HTMLElement;
+  const tab = el.closest<HTMLElement>("[data-box]");
+  if (tab) { activeBox = Number(tab.dataset.box); renderMails(mailboxes); return; }
+  const m = el.closest<HTMLElement>("[data-mail]");
+  const url = m && mailboxes?.[activeBox]?.messages?.[Number(m.dataset.mail)]?.url;
+  if (!url) return;
+  try { await invoke("open_url", { url }); close(); } catch (err) { console.error(err); }
+});
+
+async function refreshMails() {
+  try {
+    mailboxes = await invoke<Mailbox[]>("mails");
+    renderMails(mailboxes);
+  } catch (e) {
+    console.error(e);
+    if (!mailboxes) renderMails(String(e));
+  }
 }
 
 function renderClaude(d: Data["claude"]) {
@@ -304,7 +335,7 @@ function render(d: Data) {
   renderClock();
   renderApps(d.apps);
   renderWeather(wx, board);
-  renderMails(d.mails);
+  renderMails(mailboxes);
   renderClaude(d.claude);
 }
 
@@ -337,6 +368,7 @@ let timers: number[] = [];
 const WEATHER_EVERY = 30 * 60_000;
 const BOARD_EVERY = 30_000;
 const NOTION_EVERY = 5 * 60_000;
+const MAIL_EVERY = 2 * 60_000;
 
 function open() {
   closing = false;
@@ -346,8 +378,9 @@ function open() {
   if (Date.now() - wxAt > WEATHER_EVERY) refreshWeather();
   refreshBoard();
   refreshNotion();
+  refreshMails();
   timers.forEach(clearInterval);
-  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY)];
+  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY), setInterval(refreshMails, MAIL_EVERY)];
   play("normal");
 }
 async function close() {

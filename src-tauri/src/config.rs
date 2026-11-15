@@ -15,6 +15,42 @@ pub struct Config {
     pub transport: Option<TransportCfg>,
     /// Missing section = Notion card hidden.
     pub notion: Option<NotionCfg>,
+    /// One tab per box; empty = mail card hidden.
+    pub mail: Vec<MailCfg>,
+}
+
+#[derive(Deserialize)]
+pub struct MailCfg {
+    /// Tab name.
+    pub name: String,
+    /// Caption above the list (e.g. "Boîte INSA").
+    #[serde(default)]
+    pub label: String,
+    /// Gmail label / IMAP folder holding urgent mail, and the one holding mail to deal with.
+    pub urgent: String,
+    pub todo: String,
+    /// IMAP only: page opened when a mail is clicked (webmail).
+    pub open_url: Option<String>,
+    #[serde(flatten)]
+    pub kind: MailKind,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum MailKind {
+    /// OAuth secrets in the keyring: gmail_client_id, gmail_client_secret, gmail_refresh_token.
+    Gmail,
+    /// Secrets in the keyring: <secret_prefix>_user, <secret_prefix>_password.
+    Imap {
+        host: String,
+        #[serde(default = "default_imap_port")]
+        port: u16,
+        secret_prefix: String,
+    },
+}
+
+fn default_imap_port() -> u16 {
+    993
 }
 
 #[derive(Deserialize)]
@@ -150,5 +186,6 @@ mod tests {
         assert!(c.commands.iter().any(|x| x.requires_path.is_some()));
         assert!(c.weather.is_some());
         assert!(c.notion.is_some_and(|n| n.health.is_some()));
+        assert!(matches!(c.mail.as_slice(), [MailCfg { kind: MailKind::Gmail, .. }, MailCfg { kind: MailKind::Imap { port: 993, .. }, .. }]));
     }
 }

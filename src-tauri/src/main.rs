@@ -3,6 +3,7 @@
 mod commands;
 mod config;
 mod launcher;
+mod mail;
 mod notion;
 mod secrets;
 mod transport;
@@ -126,6 +127,22 @@ async fn notion(today: String, since: String) -> Result<Option<notion::Notion>, 
     .map_err(|e| e.to_string())?
 }
 
+#[tauri::command]
+async fn mails() -> Result<Vec<mail::Mailbox>, String> {
+    tauri::async_runtime::spawn_blocking(|| mail::fetch_all(&config::load().mail)).await.map_err(|e| e.to_string())
+}
+
+/// Open a mail in the browser. Only https links: the URL comes from mail data.
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err("lien refusé".into());
+    }
+    let mut child = Command::new("xdg-open").arg(url).spawn().map_err(|e| e.to_string())?;
+    std::thread::spawn(move || child.wait());
+    Ok(())
+}
+
 /// Tell the frontend when a drive is (un)mounted, so path-dependent buttons update without polling.
 fn watch_mounts(app: &AppHandle) {
     let monitor = gio::VolumeMonitor::get();
@@ -146,7 +163,7 @@ fn main() {
                 }
             }
         }))
-        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion])
+        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url])
         .setup(|app| {
             watch_mounts(app.handle());
             // First launch with --toggle (no instance running yet): show right away.
