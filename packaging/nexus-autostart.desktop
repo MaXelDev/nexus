@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NEXUS
+Comment=Start the NEXUS dashboard hidden at login
+Exec=nexus
+Icon=nexus
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

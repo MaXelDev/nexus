@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>NEXUS — maquette (référence)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#05060a}
+a{color:#cfd6e6}a:hover{color:#ffffff}
+.nx-glass{background:linear-gradient(160deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.14);backdrop-filter:blur(26px) saturate(170%);-webkit-backdrop-filter:blur(26px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),inset 0 -1px 0 rgba(255,255,255,0.04),0 24px 60px rgba(0,0,0,0.40);border-radius:28px}
+.nx-pill{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:16px}
+.nx-btn{font:inherit;color:#f2f4f8;cursor:pointer;transition:transform .15s ease,background .15s ease}
+.nx-btn:hover{background:rgba(255,255,255,0.12);transform:translateY(-1px)}
+.nx-btn:disabled{cursor:not-allowed;opacity:.38;transform:none}
+.nx-in-left{animation:nx-left .8s cubic-bezier(.16,1,.3,1) both}
+.nx-in-right{animation:nx-right .8s cubic-bezier(.16,1,.3,1) both}
+.nx-in-top{animation:nx-top .8s cubic-bezier(.16,1,.3,1) both}
+.nx-in-bottom{animation:nx-bottom .8s cubic-bezier(.16,1,.3,1) both}
+.nx-fade{animation:nx-fade .5s ease both}
+@keyframes nx-left{from{transform:translateX(-120vw) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes nx-right{from{transform:translateX(120vw) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes nx-top{from{transform:translateY(-110vh);opacity:0}to{transform:none;opacity:1}}
+@keyframes nx-bottom{from{transform:translateY(110vh);opacity:0}to{transform:none;opacity:1}}
+@keyframes nx-fade{from{opacity:0}to{opacity:1}}
+</style>
+
+</head>
+<body>
+
+
+<div style="position: relative; min-height: 900px; width: 100%; overflow: hidden; font-family: Inter, 'Adwaita Sans', system-ui, sans-serif; color: #f2f4f8; background: radial-gradient(circle at 18% 22%, #3a5fa8 0%, transparent 42%), radial-gradient(circle at 82% 30%, #6b3f8f 0%, transparent 40%), radial-gradient(circle at 60% 85%, #1f7a74 0%, transparent 45%), #0b0f1a;">
+
+<div class="nx-fade" style="position: absolute; inset: 0; background: rgba(4, 6, 12, 0.58); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"></div>
+
+<div class="nx-fade" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin-left: -180px; margin-top: -180px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.28); font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;">Logo GitHub</div>
+
+
+<div style="position: relative; box-sizing: border-box; padding: 36px 40px; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch;">
+
+<!-- Colonne gauche -->
+<div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+
+<section class="nx-glass nx-in-left" style="padding: 24px; display: flex; flex-direction: column; gap: 18px; animation-delay: 0.05s;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8AB4F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12l4 4v12H4z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg>
+<h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600;">Notion</h2>
+<span style="margin-left: auto; font-size: 12px; color: #aab2c3;">Aujourd'hui</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<div class="nx-pill" style="padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #8AB4F8; flex: none;"></span>
+<div style="min-width: 0;"><div style="font-size: 14px; font-weight: 600;">TD 4 — Couche transport</div><div style="font-size: 12px; color: #aab2c3;">Réseaux</div></div>
+</div>
+<div class="nx-pill" style="padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #8AB4F8; flex: none;"></span>
+<div style="min-width: 0;"><div style="font-size: 14px; font-weight: 600;">Exercices transformée de Fourier</div><div style="font-size: 12px; color: #aab2c3;">Signaux</div></div>
+</div>
+<div class="nx-pill" style="padding: 12px 14px; display: flex; align-items: center; gap: 12px; opacity: 0.6;">
+<span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #aab2c3; flex: none; box-sizing: border-box;"></span>
+<div style="min-width: 0;"><div style="font-size: 14px; font-weight: 600; text-decoration: line-through;">Lire le chapitre 3</div><div style="font-size: 12px; color: #aab2c3;">Anglais</div></div>
+</div>
+</div>
+<div style="display: flex; gap: 12px;">
+<div class="nx-pill" style="flex: 1; padding: 14px;">
+<div style="font-size: 12px; color: #aab2c3;">Prochain DS</div>
+<div style="font-size: 15px; font-weight: 600; margin-top: 4px;">Électronique</div>
+<div style="font-size: 13px; color: #8AB4F8; margin-top: 2px; font-weight: 600;">Jeudi 19 nov · J-4</div>
+</div>
+<div class="nx-pill" style="flex: 1; padding: 14px; display: flex; align-items: center; gap: 12px;">
+<div style="width: 54px; height: 54px; border-radius: 50%; flex: none; background: conic-gradient(#8AB4F8 0 78%, rgba(255,255,255,0.10) 78% 100%); display: flex; align-items: center; justify-content: center;">
+<div style="width: 42px; height: 42px; border-radius: 50%; background: #121725; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">78</div>
+</div>
+<div><div style="font-size: 12px; color: #aab2c3;">Santé globale</div><div style="font-size: 13px; font-weight: 600; margin-top: 2px;">Bonne forme</div></div>
+</div>
+</div>
+</section>
+
+<section class="nx-glass nx-in-left" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; animation-delay: 0.15s;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8AB4F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M7 9l3 3-3 3M12 15h5"></path></svg>
+<h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600;">Commandes WezTerm</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+<button class="nx-pill nx-btn" type="button" style="padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 6px; min-height: 76px;">
+<span style="font-size: 14px; font-weight: 600;">Trier le vault</span><span style="font-size: 12px; color: #aab2c3;">Claude · Obsidian</span>
+</button>
+<button class="nx-pill nx-btn" type="button" style="padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 6px; min-height: 76px;">
+<span style="font-size: 14px; font-weight: 600;">gdsync</span><span style="font-size: 12px; color: #aab2c3;">Synchro Google Drive</span>
+</button>
+<button class="nx-pill nx-btn" type="button"  style="padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 6px; min-height: 76px; grid-column: span 2;">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #7FD1AE;"></span>Sauvegarde Lexar</span>
+<span style="font-size: 12px; color: #aab2c3;">Clé détectée · rsync du vault</span>
+</button>
+</div>
+</section>
+</div>
+
+<!-- Colonne centrale -->
+<div style="flex: 1.1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+<header class="nx-in-top" style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 4px; animation-delay: 0.1s;">
+<div class="nx-glass" role="timer" aria-label="Heure actuelle" style="padding: 22px 36px 18px; border-radius: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 330px; box-sizing: border-box;">
+<div style="display: flex; align-items: flex-start; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 88px; font-weight: 600; line-height: 1; letter-spacing: -0.03em;">
+<span>11</span><span style="color: #8AB4F8; margin: 0 4px; opacity: 1; transition: opacity .3s ease;">:</span><span>52</span><span style="font-size: 22px; font-weight: 500; color: #aab2c3; margin: 10px 0 0 10px; letter-spacing: 0; min-width: 28px;">14</span>
+</div>
+<div style="font-size: 13px; font-weight: 500; color: #cfd6e6; letter-spacing: 0.08em; text-transform: uppercase;">dimanche 15 novembre</div>
+<div aria-hidden="true" style="display: flex; gap: 3px;">
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: #8AB4F8;"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(138,180,248,0.45);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+<span style="width: 9px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);"></span>
+
+</div>
+<div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: #aab2c3;"><span>0 h</span><span>Semaine 46</span><span>24 h</span></div>
+</div>
+</header>
+<div style="flex: 1 1 200px; min-height: 160px;"></div>
+<section class="nx-glass nx-in-bottom" style="padding: 22px; animation-delay: 0.2s;">
+<h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600; text-align: center;">Applications</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">Fx</span>
+<span style="font-size: 12px; font-weight: 500;">Firefox</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">Cl</span>
+<span style="font-size: 12px; font-weight: 500;">Claude</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">N</span>
+<span style="font-size: 12px; font-weight: 500;">Notion</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">FN</span>
+<span style="font-size: 12px; font-weight: 500;">FNote</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">Es</span>
+<span style="font-size: 12px; font-weight: 500;">Esound</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">Ob</span>
+<span style="font-size: 12px; font-weight: 500;">Obsidian</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">VS</span>
+<span style="font-size: 12px; font-weight: 500;">VS Code</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">Wz</span>
+<span style="font-size: 12px; font-weight: 500;">WezTerm</span>
+</button>
+
+<button class="nx-pill nx-btn" type="button" style="padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px;">
+<span style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 17px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #8AB4F8;">GH</span>
+<span style="font-size: 12px; font-weight: 500;">GitHub Desktop</span>
+</button>
+
+</div>
+</section>
+</div>
+
+<!-- Colonne droite -->
+<div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+
+<section class="nx-glass nx-in-right" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; animation-delay: 0.05s;">
+<div style="display: flex; align-items: center; gap: 16px;">
+<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#8AB4F8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3.5"></circle><path d="M9 2.5v1.2M2.5 9h1.2M4.4 4.4l.9.9M13.6 4.4l-.9.9"></path><path d="M8 20h9a4 4 0 0 0 .4-8 5 5 0 0 0-9.6 1.4A3.3 3.3 0 0 0 8 20z"></path></svg>
+<div>
+<div style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 40px; font-weight: 600; line-height: 1;">9°</div>
+<div style="font-size: 13px; color: #cfd6e6; margin-top: 4px;">Éclaircies · 5° / 12°</div>
+</div>
+<div style="margin-left: auto; text-align: right; font-size: 12px; color: #aab2c3;">Campus de la Doua<br>Pluie 10 %</div>
+</div>
+<div style="height: 1px; background: rgba(255,255,255,0.10);"></div>
+<div style="font-size: 12px; color: #aab2c3;">Tram · arrêt INSA-Einstein</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+
+<div style="display: flex; align-items: center; gap: 12px;">
+<span style="width: 34px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #8AB4F8; color: #0b0f1a;">T1</span>
+<span style="font-size: 13px; flex: 1; min-width: 0;">Debourg</span>
+<span style="font-size: 14px; font-weight: 600;">3 min</span>
+<span style="font-size: 12px; color: #aab2c3; width: 48px; text-align: right;">11 min</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px;">
+<span style="width: 34px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #8AB4F8; color: #0b0f1a;">T1</span>
+<span style="font-size: 13px; flex: 1; min-width: 0;">IUT Feyssine</span>
+<span style="font-size: 14px; font-weight: 600;">6 min</span>
+<span style="font-size: 12px; color: #aab2c3; width: 48px; text-align: right;">14 min</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px;">
+<span style="width: 34px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #8AB4F8; color: #0b0f1a;">T4</span>
+<span style="font-size: 13px; flex: 1; min-width: 0;">Hôpital Feyzin Vénissieux</span>
+<span style="font-size: 14px; font-weight: 600;">2 min</span>
+<span style="font-size: 12px; color: #aab2c3; width: 48px; text-align: right;">9 min</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px;">
+<span style="width: 34px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #8AB4F8; color: #0b0f1a;">T4</span>
+<span style="font-size: 13px; flex: 1; min-width: 0;">La Doua – Gaston Berger</span>
+<span style="font-size: 14px; font-weight: 600;">5 min</span>
+<span style="font-size: 12px; color: #aab2c3; width: 48px; text-align: right;">12 min</span>
+</div>
+
+</div>
+</section>
+
+<section class="nx-glass nx-in-right" style="padding: 24px; display: flex; flex-direction: column; gap: 12px; animation-delay: 0.15s;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8AB4F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="M3.5 6.5l8.5 6 8.5-6"></path></svg>
+<h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600;">Mails</h2>
+<div role="tablist" aria-label="Boîtes mail" style="margin-left: auto; display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);">
+
+<button class="nx-btn" type="button" role="tab" aria-selected="false" style="min-height: 26px; padding: 0 10px; border: none; border-radius: 7px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; background: transparent; color: #aab2c3;">
+Gmail<span style="font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 7px; line-height: 15px; background: rgba(255,255,255,0.10); color: #cfd6e6;">2</span>
+</button>
+
+<button class="nx-btn" type="button" role="tab" aria-selected="true" style="min-height: 26px; padding: 0 10px; border: none; border-radius: 7px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.14); color: #f2f4f8;">
+Zmail<span style="font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 7px; line-height: 15px; background: #8AB4F8; color: #0b0f1a;">3</span>
+</button>
+
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+<span style="color: #aab2c3;">Boîte INSA</span>
+<span style="margin-left: auto; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: rgba(255,155,138,0.16); color: #ffb3a6;">2 urgent</span>
+<span style="font-weight: 600; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: #cfd6e6;">1 à traiter</span>
+</div>
+
+<div class="nx-pill" style="padding: 9px 12px; display: flex; gap: 10px; align-items: center;">
+<span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: #ff9b8a;"></span>
+<div style="min-width: 0; flex: 1;"><div style="font-size: 13px; font-weight: 600;">Scolarité INSA</div><div style="font-size: 12px; color: #cfd6e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Inscription aux examens avant mardi</div></div>
+</div>
+
+<div class="nx-pill" style="padding: 9px 12px; display: flex; gap: 10px; align-items: center;">
+<span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: #ff9b8a;"></span>
+<div style="min-width: 0; flex: 1;"><div style="font-size: 13px; font-weight: 600;">Dép. Télécom</div><div style="font-size: 12px; color: #cfd6e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Vœux d’échange : dernier délai</div></div>
+</div>
+
+<div class="nx-pill" style="padding: 9px 12px; display: flex; gap: 10px; align-items: center;">
+<span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: #8AB4F8;"></span>
+<div style="min-width: 0; flex: 1;"><div style="font-size: 13px; font-weight: 600;">Prof. Réseaux</div><div style="font-size: 12px; color: #cfd6e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Support du TP 5</div></div>
+</div>
+
+</div>
+<div style="display: flex; gap: 14px; font-size: 11px; color: #aab2c3;"><span style="display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #ff9b8a;"></span>Urgent</span><span style="display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #8AB4F8;"></span>À traiter</span></div>
+</section>
+
+<section class="nx-glass nx-in-right" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; animation-delay: 0.25s;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8AB4F8" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"></path></svg>
+<h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600;">Utilisation Claude</h2>
+</div>
+<div>
+<div style="display: flex; justify-content: space-between; font-size: 13px;"><span>Session (5 h)</span><span style="font-weight: 600;">42 %</span></div>
+<div style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.10); margin-top: 6px; overflow: hidden;"><div style="width: 42%; height: 100%; border-radius: 4px; background: #8AB4F8;"></div></div>
+<div style="font-size: 11px; color: #aab2c3; margin-top: 4px;">Réinitialisation dans 2 h 10</div>
+</div>
+<div>
+<div style="display: flex; justify-content: space-between; font-size: 13px;"><span>Semaine</span><span style="font-weight: 600;">63 %</span></div>
+<div style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.10); margin-top: 6px; overflow: hidden;"><div style="width: 63%; height: 100%; border-radius: 4px; background: #8AB4F8;"></div></div>
+<div style="font-size: 11px; color: #aab2c3; margin-top: 4px;">Réinitialisation lundi</div>
+</div>
+</section>
+</div>
+
+</div>
+
+
+</div>
+
+</body>
+</html>

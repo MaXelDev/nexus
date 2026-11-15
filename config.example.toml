@@ -1,0 +1,12 @@
+# NEXUS configuration — copy to ~/.config/nexus/config.toml and adapt.
+# Every key is optional: missing keys use the default shown here.
+# Secrets (tokens, passwords) never go here: run scripts/setup-secrets.sh (GNOME keyring).
+
+[appearance]
+# Wayland cannot blur what is behind a window. When true, NEXUS draws your current
+# GNOME wallpaper, blurred and darkened. Set false for a truly transparent window
+# (e.g. with the Blur My Shell extension, "Applications" option, for real blur).
+wallpaper_blur = true
+
+# Image shown faintly in the centre, behind the cards (jpg, png, svg). Leave missing for none.
+logo = "~/.config/nexus/logo.jpg"

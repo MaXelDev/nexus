@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>NEXUS</title>
+<link rel="stylesheet" href="/src/style.css">
+<script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+<div id="wallpaper" data-fade></div>
+<div class="shade" data-fade></div>
+<img id="logo" data-fade alt="" hidden>
+
+<main class="grid">
+  <div class="col col-left">
+    <section class="nx-glass card" id="notion" data-from="left" data-delay=".05"></section>
+    <section class="nx-glass card" id="commands" data-from="left" data-delay=".15"></section>
+  </div>
+
+  <div class="col col-center">
+    <header class="clock-wrap" data-from="top" data-delay=".1">
+      <div class="nx-glass clock" id="clock" role="timer" aria-label="Heure actuelle"></div>
+    </header>
+    <div class="spacer"></div>
+    <section class="nx-glass card apps" id="apps" data-from="bottom" data-delay=".2"></section>
+  </div>
+
+  <div class="col col-right">
+    <section class="nx-glass card" id="weather" data-from="right" data-delay=".05"></section>
+    <section class="nx-glass card" id="mails" data-from="right" data-delay=".15"></section>
+    <section class="nx-glass card" id="claude" data-from="right" data-delay=".25"></section>
+  </div>
+</main>
+</body>
+</html>

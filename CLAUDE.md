@@ -1,0 +1,44 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+NEXUS : dashboard plein écran Tauri v2 pour Fedora 44 (GNOME, Wayland). Spec complète : `PROMPT-NEXUS.md` (source de vérité, ne pas la recopier ici). Avancement et décisions : `docs/PROGRESS.md` — lire en premier après un `/clear`.
+
+## État
+Étape 1 validée (squelette, données factices `src/demo.ts`). Prochaine : étape 2.
+
+## Stack
+- Backend Rust (Tauri v2, `tauri-plugin-single-instance`, crate `keyring` pour le Secret Service).
+- Frontend vanilla TypeScript + Vite (`src/main.ts` : une fonction render par carte) ; référence visuelle : `docs/maquette.html` (couleurs, rayons, flous, animations ; données = exemples).
+- Polices Inter + Space Grotesk embarquées (aucun chargement réseau).
+
+## Arborescence
+- `src-tauri/` : backend Rust (un module par service : notion, gmail, imap, weather, transport, claude_usage, launcher, commands).
+- `src/` : frontend.
+- `scripts/setup-secrets.sh`, `scripts/check-secrets.sh` : saisie masquée / vérification OK-ERREUR des secrets.
+- `config.example.toml` : config générique commentée ; la vraie config est dans `~/.config/nexus/config.toml`.
+- `docs/` : maquette, PROGRESS.md, ADR.
+
+## Commandes
+Rust est dans `~/.cargo/bin` (ajouter au PATH si besoin).
+- Dev : `npm run tauri dev` (fenêtre cachée au départ) puis `src-tauri/target/debug/nexus --toggle` pour afficher/cacher.
+- Build : `npm run tauri build` (→ .rpm) ; frontend seul : `npm run build`.
+- Tests : `cargo test --manifest-path src-tauri/Cargo.toml` (un test : ajouter son nom).
+- Secrets : `NEXUS_IMAP_HOST=… scripts/check-secrets.sh`.
+- Captures sans Tauri : `firefox --headless --screenshot out.png --window-size=1920,1080 http://localhost:1420/` (Playwright n'a pas de navigateur).
+
+## Comportement clé
+- Lancée cachée à l'ouverture de session ; `nexus --toggle` (raccourci GNOME créé par l'utilisateur lui-même) est relayé à l'instance existante par single-instance.
+- Aucun rafraîchissement tant que la fenêtre est cachée ; cache affiché à l'ouverture puis refresh périodique tant que visible.
+- Chaque service est optionnel et isolé : une erreur = état d'erreur discret sur sa carte seulement.
+
+## Règles secrets (strictes)
+- Tous les secrets dans le trousseau GNOME, attributs `service nexus key <nom>` (`notion_token`, `gmail_client_id`, `gmail_client_secret`, `gmail_refresh_token`, `zmail_user`, `zmail_password`, `grandlyon_user`, `grandlyon_password`).
+- Ne jamais afficher, logger, ni écrire un secret dans un fichier du dépôt ; ne jamais demander à l'utilisateur de le coller dans la conversation. Vérifier l'existence avec `secret-tool lookup ... >/dev/null`.
+- `.env` éventuel uniquement dans `~/.config/nexus/.env` (chmod 600).
+
+## Conventions
+- Open source MIT : rien de personnel en dur (chemins, apps, arrêts, coordonnées, libellés) → tout passe par `config.toml`.
+- Commentaires Rust pédagogiques quand ce n'est pas évident (l'utilisateur découvre Rust).
+- Commits en anglais, un par étape validée. Jamais de `git push` / `gh repo create` sans demande explicite.
+- Accent fixe `#8AB4F8` (ne pas lire l'accent système).
