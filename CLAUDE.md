@@ -19,6 +19,10 @@ NEXUS : dashboard plein écran Tauri v2 pour Fedora 44 (GNOME, Wayland). Spec co
 - `config.example.toml` : config générique commentée ; la vraie config est dans `~/.config/nexus/config.toml`.
 - `docs/` : maquette, PROGRESS.md, ADR.
 
+## Économie de tokens (graphify)
+- Avant de lire du code pour trouver où/comment : `graphify query "<question>"` (graphe AST du code dans `graphify-out/`, ignoré par git).
+- Après chaque étape : `graphify update .` (AST seulement, gratuit). Pas d'extraction sémantique des docs (coûteuse).
+
 ## Commandes
 Rust est dans `~/.cargo/bin` (ajouter au PATH si besoin).
 - Dev : `npm run tauri dev` (fenêtre cachée au départ) puis `src-tauri/target/debug/nexus --toggle` pour afficher/cacher.
