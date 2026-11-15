@@ -44,7 +44,7 @@ Runtime tools are already on Fedora Workstation: `secret-tool` (libsecret), `gtk
 git clone https://github.com/<you>/nexus && cd nexus
 npm install
 npm run tauri build
-sudo dnf install ./src-tauri/target/release/bundle/rpm/nexus-0.1.0-1.x86_64.rpm
+sudo dnf install ./src-tauri/target/release/bundle/rpm/nexus-1.0.0-1.x86_64.rpm
 ```
 
 ### 3. Start with your session (hidden)
