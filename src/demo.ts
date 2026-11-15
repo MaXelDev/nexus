@@ -16,16 +16,6 @@ export const demo = {
   ],
   apps: ["Firefox", "Claude", "Notion", "FNote", "Esound", "Obsidian", "VS Code", "WezTerm", "GitHub Desktop"]
     .map((name) => ({ name, icon: null as string | null, found: true })),
-  weather: { temp: 9, desc: "Éclaircies", min: 5, max: 12, rain: 10, place: "Campus de la Doua" },
-  trams: {
-    stop: "INSA-Einstein",
-    departures: [
-      { line: "T1", dest: "Debourg", next: "3 min", after: "11 min" },
-      { line: "T1", dest: "IUT Feyssine", next: "6 min", after: "14 min" },
-      { line: "T4", dest: "Hôpital Feyzin Vénissieux", next: "2 min", after: "9 min" },
-      { line: "T4", dest: "La Doua – Gaston Berger", next: "5 min", after: "12 min" },
-    ],
-  },
   mails: [
     { name: "Gmail", label: "Boîte Gmail", items: [
       { from: "GitHub", subject: "Your weekly digest", urgent: false },

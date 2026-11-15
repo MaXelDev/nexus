@@ -114,18 +114,117 @@ function renderApps(d: App[]) {
   $("apps").innerHTML = `<h2>Applications</h2><div class="app-grid">${btns}</div>`;
 }
 
-function renderWeather(w: Data["weather"], trams: Data["trams"]) {
-  const rows = trams.departures.map((t) => `
-    <div class="tram"><span class="line">${esc(t.line)}</span><span class="dest">${esc(t.dest)}</span>
-      <span class="next">${esc(t.next)}</span><span class="after">${esc(t.after)}</span></div>`).join("");
-  $("weather").innerHTML = `
-    <div class="wx">${svg(ICON.cloudSun, 46, 1.6)}
-      <div><div class="wx-temp">${esc(w.temp)}°</div><div class="wx-desc">${esc(w.desc)} · ${esc(w.min)}° / ${esc(w.max)}°</div></div>
-      <div class="wx-side">${esc(w.place)}<br>Pluie ${esc(w.rain)} %</div>
-    </div>
-    <div class="sep"></div>
-    <div class="muted">Tram · arrêt ${esc(trams.stop)}</div>
-    <div class="trams">${rows}</div>`;
+// ---------- weather + departures ----------
+
+type Weather = { temp: number; code: number; is_day: boolean; min: number; max: number; rain: number | null; place: string };
+type Dep = { line: string; direction: string; at: string };
+type Board = { stop: string; departures: Dep[] };
+/** undefined = not loaded yet, null = disabled in config, string = error message. */
+type Slot<T> = T | null | undefined | string;
+
+const WX_ICON = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  cloudSun: ICON.cloudSun,
+  cloud: '<path d="M7 19h10a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.5 1.6A3.8 3.8 0 0 0 7 19z"/>',
+  fog: '<path d="M4 9h16M3 13h18M5 17h14"/>',
+  rain: '<path d="M7 15h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
+  snow: '<path d="M7 15h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M8 19h.01M12 20h.01M16 19h.01"/>',
+  storm: '<path d="M7 15h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+};
+/** WMO weather code (Open-Meteo) → French label + icon. */
+function wmo(code: number, day: boolean): [string, keyof typeof WX_ICON] {
+  if (code === 0) return day ? ["Ensoleillé", "sun"] : ["Ciel dégagé", "moon"];
+  if (code <= 2) return ["Éclaircies", day ? "cloudSun" : "moon"];
+  if (code === 3) return ["Couvert", "cloud"];
+  if (code <= 48) return ["Brouillard", "fog"];
+  if (code <= 57) return ["Bruine", "rain"];
+  if (code <= 67) return ["Pluie", "rain"];
+  if (code <= 77) return ["Neige", "snow"];
+  if (code <= 82) return ["Averses", "rain"];
+  if (code <= 86) return ["Averses de neige", "snow"];
+  return ["Orage", "storm"];
+}
+
+/** Group departures by line + direction, keep the next two, as "N min" (or "17h35" beyond an hour). */
+export function tramRows(deps: Dep[], now = Date.now()) {
+  const fmt = (t: number) => {
+    const m = Math.floor((t - now) / 60000);
+    const d = new Date(t);
+    return m < 1 ? "Proche" : m < 60 ? `${m} min` : `${d.getHours()}h${pad(d.getMinutes())}`;
+  };
+  const groups = new Map<string, number[]>();
+  for (const d of deps) {
+    const t = new Date(d.at.replace(" ", "T")).getTime(); // local time, as the API gives it
+    if (Number.isNaN(t) || t < now - 30_000) continue;
+    const k = `${d.line}\u0000${d.direction}`;
+    groups.set(k, [...(groups.get(k) ?? []), t]);
+  }
+  return [...groups]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, ts]) => {
+      ts.sort((a, b) => a - b);
+      const [line, dest] = k.split("\u0000");
+      return { line, dest, next: fmt(ts[0]), after: ts[1] ? fmt(ts[1]) : "" };
+    });
+}
+
+function renderWeather(w: Slot<Weather>, b: Slot<Board>) {
+  const card = $("weather");
+  card.hidden = w === null && b === null;
+  let top = "";
+  if (typeof w === "string") top = `<div class="error">Météo indisponible</div>`;
+  else if (w) {
+    const [desc, icon] = wmo(w.code, w.is_day);
+    top = `<div class="wx">${svg(WX_ICON[icon], 46, 1.6)}
+      <div><div class="wx-temp">${Math.round(w.temp)}°</div><div class="wx-desc">${desc} · ${Math.round(w.min)}° / ${Math.round(w.max)}°</div></div>
+      <div class="wx-side">${esc(w.place)}${w.rain == null ? "" : `<br>Pluie ${w.rain} %`}</div></div>`;
+  }
+  let bottom = "";
+  if (typeof b === "string") bottom = `<div class="error">Passages indisponibles</div>`;
+  else if (b) {
+    const rows = tramRows(b.departures).map((t) => `
+      <div class="tram"><span class="line">${esc(t.line)}</span><span class="dest">${esc(t.dest)}</span>
+        <span class="next">${esc(t.next)}</span><span class="after">${esc(t.after)}</span></div>`).join("");
+    bottom = `<div class="muted">Tram · arrêt ${esc(b.stop)}</div>
+      <div class="trams">${rows || `<div class="error">Aucun passage prévu</div>`}</div>`;
+  }
+  card.innerHTML = top + (top && bottom ? `<div class="sep"></div>` : "") + bottom;
+}
+
+// Last good values survive restarts (shown instantly on open, then refreshed).
+const cache = {
+  get<T>(k: string): T | undefined {
+    try { return JSON.parse(localStorage.getItem(k) ?? "null") ?? undefined; } catch { return undefined; }
+  },
+  set(k: string, v: unknown) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable: memory only */ }
+  },
+};
+let wx: Slot<Weather> = cache.get<Weather>("nx-weather");
+let board: Slot<Board> = cache.get<Board>("nx-board");
+let wxAt = 0;
+
+async function refreshWeather() {
+  try {
+    wx = await invoke<Weather | null>("weather");
+    wxAt = Date.now();
+    if (wx) cache.set("nx-weather", wx);
+  } catch (e) {
+    console.error(e);
+    if (!wx || typeof wx === "string") wx = String(e); // keep showing the last good value
+  }
+  renderWeather(wx, board);
+}
+async function refreshBoard() {
+  try {
+    board = await invoke<Board | null>("departures");
+    if (board) cache.set("nx-board", board);
+  } catch (e) {
+    console.error(e);
+    board = String(e); // stale departures would be misleading
+  }
+  renderWeather(wx, board);
 }
 
 let activeBox = 1;
@@ -165,7 +264,7 @@ function render(d: Data) {
   renderCommands(d.commands);
   renderClock();
   renderApps(d.apps);
-  renderWeather(d.weather, d.trams);
+  renderWeather(wx, board);
   renderMails(d.mails);
   renderClaude(d.claude);
 }
@@ -194,10 +293,20 @@ function play(direction: "normal" | "reverse") {
 
 const refreshCommands = () => invoke<Cmd[]>("command_states").then(renderCommands, console.error);
 
+// Periodic refreshes, only while visible.
+let timers: number[] = [];
+const WEATHER_EVERY = 30 * 60_000;
+const BOARD_EVERY = 30_000;
+
 function open() {
   closing = false;
   startClock();
   refreshCommands();
+  renderWeather(wx, board);
+  if (Date.now() - wxAt > WEATHER_EVERY) refreshWeather();
+  refreshBoard();
+  timers.forEach(clearInterval);
+  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY)];
   play("normal");
 }
 async function close() {
@@ -206,6 +315,8 @@ async function close() {
   await play("reverse");
   if (!closing) return; // an `open` during the animation cancels the hide
   stopClock();
+  timers.forEach(clearInterval);
+  timers = [];
   await invoke("hide");
 }
 

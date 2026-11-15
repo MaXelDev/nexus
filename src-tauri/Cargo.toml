@@ -17,6 +17,9 @@ url = "2"
 # Same versions Tauri already links (no extra build): icon theme lookup and mount events.
 gtk = "0.18"
 gio = "0.18"
+ureq = { version = "3", features = ["json"] }
+base64 = "0.22"
+serde_json = "1"
 
 [profile.release]
 strip = true

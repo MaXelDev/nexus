@@ -9,6 +9,35 @@ pub struct Config {
     pub appearance: Appearance,
     pub apps: Vec<AppEntry>,
     pub commands: Vec<CommandEntry>,
+    /// Missing section = weather hidden.
+    pub weather: Option<WeatherCfg>,
+    /// Missing section = departures hidden.
+    pub transport: Option<TransportCfg>,
+}
+
+#[derive(Deserialize)]
+pub struct WeatherCfg {
+    pub latitude: f64,
+    pub longitude: f64,
+    #[serde(default)]
+    pub place: String,
+}
+
+#[derive(Deserialize)]
+pub struct TransportCfg {
+    #[serde(default = "default_provider")]
+    pub provider: String,
+    #[serde(default)]
+    pub stop_name: String,
+    /// Provider stop ids (TCL: one id per direction/platform).
+    pub stop_ids: Vec<u32>,
+    /// Keep only these lines; empty = all.
+    #[serde(default)]
+    pub lines: Vec<String>,
+}
+
+fn default_provider() -> String {
+    "tcl".into()
 }
 
 /// One launcher tile. `desktop` is the .desktop file name without extension (e.g. "org.mozilla.firefox").
@@ -86,5 +115,6 @@ mod tests {
         let c: Config = toml::from_str(include_str!("../../config.example.toml")).unwrap();
         assert!(!c.apps.is_empty());
         assert!(c.commands.iter().any(|x| x.requires_path.is_some()));
+        assert!(c.weather.is_some());
     }
 }
