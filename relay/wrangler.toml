@@ -1,0 +1,8 @@
+# nexus-relay: the phone's only door to its data (docs/relay-api.md, docs/adr/0004-relay.md).
+# No secret and nothing personal here: secrets via `wrangler secret put`, personal settings in the
+# NEXUS_CONFIG secret (scripts/relay-config.py). Deploy: `npx wrangler deploy` from this folder.
+name = "nexus-relay"
+main = "src/index.ts"
+compatibility_date = "2026-11-12"
+workers_dev = true
+preview_urls = false

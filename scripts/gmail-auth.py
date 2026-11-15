@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""One-time Gmail OAuth (installed-app loopback flow, scope gmail.readonly).
+"""One-time Gmail OAuth (installed-app loopback flow).
 
-Reads gmail_client_id / gmail_client_secret from the GNOME keyring, opens the browser,
-catches the redirect on 127.0.0.1, and stores the refresh token as gmail_refresh_token.
+NEXUS PC (default): scope gmail.readonly, reads gmail_client_id / gmail_client_secret from the
+GNOME keyring and stores the refresh token there as gmail_refresh_token.
+--relay: same client, but a separate refresh token with scope gmail.labels (label counts only, no access to messages); client id, secret and refresh token
+go straight to `wrangler secret put` on stdin, nothing is stored locally.
 No secret is printed. Standard library only.
 """
-import base64, hashlib, http.server, json, secrets, subprocess, sys, urllib.error, urllib.parse, urllib.request, webbrowser
+import base64, hashlib, http.server, json, os, secrets, subprocess, sys, urllib.error, urllib.parse, urllib.request, webbrowser
 
-SCOPE = "https://www.googleapis.com/auth/gmail.readonly"
+RELAY = "--relay" in sys.argv[1:]
+SCOPE = "https://www.googleapis.com/auth/gmail." + ("labels" if RELAY else "readonly")
+RELAY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "relay")
 
 
 def lookup(key):
@@ -46,7 +50,7 @@ url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode({
     "access_type": "offline", "prompt": "consent", "state": state,
     "code_challenge": challenge, "code_challenge_method": "S256",
 })
-print("Ouverture du navigateur pour l'autorisation Gmail (lecture seule)…")
+print("Ouverture du navigateur pour l'autorisation Gmail (" + ("libellés seulement" if RELAY else "lecture seule") + ")…")
 webbrowser.open(url)
 while "code" not in result and "error" not in result:
     srv.handle_request()
@@ -63,6 +67,13 @@ except urllib.error.HTTPError as e:
     sys.exit(f"Échange du code refusé (HTTP {e.code})")
 if "refresh_token" not in tok:
     sys.exit("Pas de refresh token reçu : révoque l'accès NEXUS dans ton compte Google puis relance.")
-subprocess.run(["secret-tool", "store", "--label=nexus gmail_refresh_token", "service", "nexus", "key", "gmail_refresh_token"],
-               input=tok["refresh_token"], text=True, check=True)
-print("gmail_refresh_token : enregistré dans le trousseau")
+if RELAY:
+    for name, value in (("GMAIL_CLIENT_ID", client_id), ("GMAIL_CLIENT_SECRET", client_secret),
+                        ("GMAIL_REFRESH_TOKEN", tok["refresh_token"])):
+        r = subprocess.run(["npx", "-y", "wrangler@4", "secret", "put", name], cwd=RELAY_DIR, input=value,
+                           text=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"{name} : " + ("envoyé au relais" if r.returncode == 0 else "ÉCHEC (wrangler login ?)"))
+else:
+    subprocess.run(["secret-tool", "store", "--label=nexus gmail_refresh_token", "service", "nexus", "key", "gmail_refresh_token"],
+                   input=tok["refresh_token"], text=True, check=True)
+    print("gmail_refresh_token : enregistré dans le trousseau")
