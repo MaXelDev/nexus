@@ -335,8 +335,18 @@ const NOTION_EVERY = 5 * 60_000;
 const MAIL_EVERY = 2 * 60_000;
 const CLAUDE_EVERY = 5 * 60_000;
 
+/** Wallpaper and logo, re-read on every open so a wallpaper change shows up without a restart. */
+async function applyAppearance() {
+  const a = await invoke<{ wallpaper: string | null; logo: string | null }>("appearance");
+  $("wallpaper").style.backgroundImage = a.wallpaper ? `url("${convertFileSrc(a.wallpaper)}")` : "";
+  const img = $("logo") as HTMLImageElement;
+  if (a.logo) img.src = convertFileSrc(a.logo);
+  img.hidden = !a.logo;
+}
+
 function open() {
   closing = false;
+  applyAppearance().catch(console.error);
   startClock();
   refreshCommands();
   renderWeather(wx, board);
@@ -379,9 +389,7 @@ function onPick(id: string, cmd: string) {
 async function boot() {
   render();
   if (!("__TAURI_INTERNALS__" in window)) return preview();
-  const a = await invoke<{ wallpaper: string | null; logo: string | null }>("appearance");
-  if (a.wallpaper) $("wallpaper").style.backgroundImage = `url("${convertFileSrc(a.wallpaper)}")`;
-  if (a.logo) { const img = $("logo") as HTMLImageElement; img.src = convertFileSrc(a.logo); img.hidden = false; }
+  await applyAppearance();
 
   invoke<App[]>("apps").then(renderApps, console.error); // shortcut: resolved once at start, restart NEXUS after changing [[apps]]
   onPick("apps", "launch_app");

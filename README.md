@@ -27,54 +27,33 @@ Every card is optional: remove its section from the config and it disappears.
 
 ## Installation (Fedora 44)
 
-### 1. Build dependencies
+Download the `.rpm` from the [latest release](https://github.com/MaXelDev/nexus/releases/latest), then:
+
+```bash
+sudo dnf install ./nexus-*.x86_64.rpm
+```
+
+That's all. Press **Super+²** on an AZERTY keyboard (**Super+`** on QWERTY: the key above Tab) to show the dashboard, and **Escape** to close it. Launching an app or a command also closes it.
+
+What the package does for you:
+
+- **Starts NEXUS hidden** in your current session and at every login (`/etc/xdg/autostart/nexus.desktop`).
+- **Creates the GNOME shortcut** on first start: Settings → Keyboard → Custom Shortcuts → NEXUS, which runs `nexus --toggle`. Wayland apps can't grab global keys, so GNOME runs this command for us. That key is GNOME's "switch windows of an app" by default; NEXUS takes the Super variant and leaves Alt+the same key alone. To use another key, change it in Settings. To stop NEXUS from creating it, set `shortcut = ""` in the config.
+- **Works without a config file**: clock, a grid of stock Fedora apps and, if Claude Code is installed, its usage. Add the other cards in the config (below).
+
+### Build from source
 
 ```bash
 sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
-  libappindicator-gtk3-devel librsvg2-devel libxdo-devel nodejs npm
+  libappindicator-gtk3-devel librsvg2-devel libxdo-devel nodejs npm rpm-build
 sudo dnf group install c-development
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust via rustup
+git clone https://github.com/MaXelDev/nexus && cd nexus
+npm install
+npm run tauri build    # → src-tauri/target/release/bundle/rpm/
 ```
 
 Runtime tools are already on Fedora Workstation: `secret-tool` (libsecret), `gtk-launch` (GTK 3) and `xdg-open`. The command buttons use [WezTerm](https://wezfurlong.org/wezterm/).
-
-### 2. Build and install
-
-```bash
-git clone https://github.com/MaXelDev/nexus && cd nexus
-npm install
-npm run tauri build
-sudo dnf install ./src-tauri/target/release/bundle/rpm/nexus-1.0.0-1.x86_64.rpm
-```
-
-### 3. Start with your session (hidden)
-
-```bash
-mkdir -p ~/.config/autostart
-cp packaging/nexus-autostart.desktop ~/.config/autostart/nexus.desktop
-```
-
-### 4. Keyboard shortcut (Super+D)
-
-Wayland apps cannot grab global shortcuts, so a GNOME custom shortcut runs `nexus --toggle`. A running NEXUS receives it and shows or hides itself.
-
-Super+D is GNOME's "show desktop" by default. Free it first, or pick another binding:
-
-```bash
-gsettings get org.gnome.desktop.wm.keybindings show-desktop   # check for a conflict
-gsettings set org.gnome.desktop.wm.keybindings show-desktop "[]"
-
-KEY=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/nexus/
-LIST=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
-case "$LIST" in *"$KEY"*) ;; "@as []") LIST="['$KEY']" ;; *) LIST="${LIST%]}, '$KEY']" ;; esac
-gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$LIST"
-S=org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$KEY
-gsettings set $S name 'NEXUS'
-gsettings set $S command 'nexus --toggle'
-gsettings set $S binding '<Super>d'
-```
-
-Press **Escape** to close the dashboard. Launching an app or a command also closes it.
 
 ## Configuration
 
@@ -85,7 +64,7 @@ scripts/setup-secrets.sh                              # masked prompts, stored i
 scripts/check-secrets.sh                              # one test call per service: OK / ERREUR
 ```
 
-[`config.example.toml`](config.example.toml) documents every key. Config changes apply the next time the dashboard opens; changing `[[apps]]` or `[appearance]` needs a restart of NEXUS.
+[`config.example.toml`](config.example.toml) documents every key. Config changes apply the next time the dashboard opens; changing `[[apps]]` needs a restart of NEXUS. The blurred wallpaper follows your GNOME wallpaper.
 
 Secrets are stored with the attributes `service nexus key <name>`. To read one yourself, use `secret-tool lookup service nexus key notion_token`.
 
@@ -161,7 +140,6 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 ```bash
 sudo dnf remove nexus
-rm -f ~/.config/autostart/nexus.desktop
 rm -rf ~/.config/nexus ~/.local/share/io.github.nexus.dashboard
 for k in notion_token gmail_client_id gmail_client_secret gmail_refresh_token \
          zmail_user zmail_password grandlyon_user grandlyon_password; do
@@ -169,7 +147,7 @@ for k in notion_token gmail_client_id gmail_client_secret gmail_refresh_token \
 done
 ```
 
-If you created the Super+D shortcut, remove it in Settings → Keyboard → Custom Shortcuts.
+Then remove the NEXUS entry in Settings → Keyboard → Custom Shortcuts.
 
 ## Contributing
 
@@ -183,8 +161,8 @@ Issues and pull requests are welcome. Keep changes small, keep every card option
 
 ### En bref (français)
 
-NEXUS est un tableau de bord plein écran pour Fedora GNOME (Wayland). Il reste caché et s'affiche avec un raccourci (`nexus --toggle`, par exemple sur Super+D).
+NEXUS est un tableau de bord plein écran pour Fedora GNOME (Wayland). Il reste caché et s'affiche avec un raccourci (Super+², la touche au-dessus de Tab, créé automatiquement).
 
 Il regroupe l'horloge, vos applications, des commandes WezTerm, la météo, les prochains passages des transports, Notion, vos mails Gmail et IMAP, et votre quota Claude.
 
-Les secrets restent dans le trousseau GNOME, et toute la configuration est dans `~/.config/nexus/config.toml`. Pour l'installation, suivez les étapes ci-dessus.
+Les secrets restent dans le trousseau GNOME, et toute la configuration est dans `~/.config/nexus/config.toml`. Installation : `sudo dnf install ./nexus-*.rpm`, c'est tout.

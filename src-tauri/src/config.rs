@@ -7,6 +7,12 @@ use std::path::PathBuf;
 #[serde(default)] // missing keys take the value from `Default`
 pub struct Config {
     pub appearance: Appearance,
+    /// GNOME shortcut created on first start (Above_Tab = the key above Tab: ² on AZERTY, ` on QWERTY).
+    /// "" = never touch the keyboard settings. Once created, edit it in GNOME Settings, not here.
+    #[serde(default = "default_shortcut")]
+    pub shortcut: String,
+    /// Missing key = a few stock Fedora Workstation apps, so a fresh install isn't empty.
+    #[serde(default = "default_apps")]
     pub apps: Vec<AppEntry>,
     pub commands: Vec<CommandEntry>,
     /// Missing section = weather hidden.
@@ -17,6 +23,20 @@ pub struct Config {
     pub notion: Option<NotionCfg>,
     /// One tab per box; empty = mail card hidden.
     pub mail: Vec<MailCfg>,
+}
+
+fn default_shortcut() -> String {
+    "<Super>Above_Tab".into()
+}
+
+fn default_apps() -> Vec<AppEntry> {
+    [
+        ("Firefox", "org.mozilla.firefox"), ("Fichiers", "org.gnome.Nautilus"), ("Terminal", "org.gnome.Ptyxis"),
+        ("Éditeur", "org.gnome.TextEditor"), ("Agenda", "org.gnome.Calendar"), ("Calculatrice", "org.gnome.Calculator"),
+        ("Logiciels", "org.gnome.Software"), ("Moniteur", "org.gnome.SystemMonitor"), ("Paramètres", "org.gnome.Settings"),
+    ]
+    .map(|(name, desktop)| AppEntry { name: name.into(), desktop: desktop.into() })
+    .into()
 }
 
 #[derive(Deserialize)]
@@ -160,10 +180,12 @@ pub fn expand_home(p: impl AsRef<str>) -> PathBuf {
 
 pub fn load() -> Config {
     let path = dir().join("config.toml");
-    let Ok(text) = std::fs::read_to_string(&path) else { return Config::default() };
+    // An empty document goes through serde, so field-level defaults (apps, shortcut) apply.
+    let defaults = || toml::from_str::<Config>("").expect("empty config parses");
+    let Ok(text) = std::fs::read_to_string(&path) else { return defaults() };
     toml::from_str(&text).unwrap_or_else(|e| {
         eprintln!("nexus: {} invalide, valeurs par défaut utilisées : {e}", path.display());
-        Config::default()
+        defaults()
     })
 }
 
@@ -175,6 +197,9 @@ mod tests {
     fn partial_file_keeps_defaults() {
         let c: Config = toml::from_str("[appearance]\nwallpaper_blur = false\n").unwrap();
         assert!(!c.appearance.wallpaper_blur);
+        assert_eq!((c.apps.len(), c.shortcut.as_str()), (9, "<Super>Above_Tab")); // fresh-install defaults
+        let c: Config = toml::from_str("apps = []\nshortcut = \"\"").unwrap();
+        assert!(c.apps.is_empty() && c.shortcut.is_empty());
         assert!(c.appearance.logo.is_some());
         assert!(c.apps.is_empty());
     }
@@ -182,7 +207,7 @@ mod tests {
     #[test]
     fn example_config_parses() {
         let c: Config = toml::from_str(include_str!("../../config.example.toml")).unwrap();
-        assert!(!c.apps.is_empty());
+        assert_eq!((c.apps.len(), c.shortcut.as_str()), (3, "<Super>Above_Tab"));
         assert!(c.commands.iter().any(|x| x.requires_path.is_some()));
         assert!(c.weather.is_some());
         assert!(c.notion.is_some_and(|n| n.health.is_some()));

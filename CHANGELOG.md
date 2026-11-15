@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0] — 2026-11-15
+
+- Installing the `.rpm` is now enough: it starts NEXUS in the open session and at every login, and NEXUS creates its GNOME shortcut (Super + the key above Tab) on first start.
+- Works without a config file: stock Fedora apps in the launcher.
+- The blurred background follows wallpaper changes without a restart.
+
 ## [1.0.0] — 2026-11-15
 
 First release.

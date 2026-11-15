@@ -7,6 +7,7 @@ mod launcher;
 mod mail;
 mod notion;
 mod secrets;
+mod shortcut;
 mod transport;
 mod weather;
 
@@ -172,6 +173,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url, claude_usage])
         .setup(|app| {
             watch_mounts(app.handle());
+            shortcut::ensure(&config::load().shortcut);
             // First launch with --toggle (no instance running yet): show right away.
             if std::env::args().any(|a| a == "--toggle") {
                 if let Some(win) = app.get_webview_window("main") {

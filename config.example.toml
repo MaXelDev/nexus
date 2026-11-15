@@ -2,6 +2,11 @@
 # Every key is optional: missing keys use the default shown here.
 # Secrets (tokens, passwords) never go here: run scripts/setup-secrets.sh (GNOME keyring).
 
+# GNOME shortcut that toggles the dashboard, created once on first start
+# (Above_Tab = the key above Tab: ² on AZERTY, ` on QWERTY). After that, change it in
+# Settings → Keyboard → Custom Shortcuts. "" = never touch keyboard settings.
+shortcut = "<Super>Above_Tab"
+
 [appearance]
 # Wayland cannot blur what is behind a window. When true, NEXUS draws your current
 # GNOME wallpaper, blurred and darkened. Set false for a truly transparent window
@@ -15,7 +20,8 @@ logo = "~/.config/nexus/logo.jpg"
 # App launcher (3×3 grid, filled row by row). `desktop` = .desktop file name
 # without extension, searched in ~/.local/share/applications, XDG_DATA_DIRS
 # and the Flatpak exports. Tip: `ls /usr/share/applications`.
-# Missing apps are shown greyed out and logged.
+# Missing apps are shown greyed out and logged. No [[apps]] at all = 9 stock
+# Fedora apps; `apps = []` = empty grid.
 [[apps]]
 name = "Firefox"
 desktop = "org.mozilla.firefox"
