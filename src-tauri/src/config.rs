@@ -13,6 +13,39 @@ pub struct Config {
     pub weather: Option<WeatherCfg>,
     /// Missing section = departures hidden.
     pub transport: Option<TransportCfg>,
+    /// Missing section = Notion card hidden.
+    pub notion: Option<NotionCfg>,
+}
+
+#[derive(Deserialize)]
+pub struct NotionCfg {
+    pub tasks: NotionTasks,
+    /// Missing = no health ring.
+    pub health: Option<NotionHealth>,
+}
+
+/// Property names of the tasks database (Notion is case-sensitive).
+#[derive(Deserialize)]
+pub struct NotionTasks {
+    pub database: String,
+    pub title: String,
+    pub subject: String,
+    pub date: String,
+    pub status: String,
+    /// Status value meaning "done".
+    pub done_value: String,
+    /// Subject value marking an exam; the exam's title is shown as its subject.
+    pub exam_value: String,
+}
+
+/// Average of a number/formula property over the last 7 days, on rows matching a select filter.
+#[derive(Deserialize)]
+pub struct NotionHealth {
+    pub database: String,
+    pub score: String,
+    pub date: String,
+    pub filter_property: String,
+    pub filter_value: String,
 }
 
 #[derive(Deserialize)]
@@ -116,5 +149,6 @@ mod tests {
         assert!(!c.apps.is_empty());
         assert!(c.commands.iter().any(|x| x.requires_path.is_some()));
         assert!(c.weather.is_some());
+        assert!(c.notion.is_some_and(|n| n.health.is_some()));
     }
 }

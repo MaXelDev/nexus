@@ -3,6 +3,7 @@
 mod commands;
 mod config;
 mod launcher;
+mod notion;
 mod secrets;
 mod transport;
 mod weather;
@@ -116,6 +117,15 @@ async fn departures() -> Result<Option<transport::Board>, String> {
         .map_err(|e| e.to_string())?
 }
 
+#[tauri::command]
+async fn notion(today: String, since: String) -> Result<Option<notion::Notion>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        config::load().notion.as_ref().map(|c| notion::fetch(c, &today, &since)).transpose()
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Tell the frontend when a drive is (un)mounted, so path-dependent buttons update without polling.
 fn watch_mounts(app: &AppHandle) {
     let monitor = gio::VolumeMonitor::get();
@@ -136,7 +146,7 @@ fn main() {
                 }
             }
         }))
-        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures])
+        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion])
         .setup(|app| {
             watch_mounts(app.handle());
             // First launch with --toggle (no instance running yet): show right away.

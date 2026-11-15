@@ -64,3 +64,26 @@ place = "Lyon"
 # stop_name = "Bellecour"
 # stop_ids = [12345, 12346]
 # lines = ["A", "D"]
+
+# ---------------------------------------------------------------------------
+# Notion (official API, internal integration). Token in the keyring as
+# notion_token; share the databases with the integration (••• → Connections).
+# Database id = the 32 hex chars in the database URL. Property names are case-sensitive.
+# Remove the section to hide the card.
+[notion.tasks]
+database = "00000000000000000000000000000000"
+title = "Name"         # title property
+subject = "Subject"    # select
+date = "Due"           # date
+status = "Status"      # status
+done_value = "Done"    # status value meaning done (shown struck through)
+exam_value = "Exam"    # subject value marking an exam (next exam = its title + countdown)
+
+# Optional health ring: average over the last 7 days of a number/formula
+# property, on rows where a select property equals a value.
+[notion.health]
+database = "00000000000000000000000000000000"
+score = "Score"
+date = "Date"
+filter_property = "Status"
+filter_value = "Filled"

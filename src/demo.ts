@@ -1,14 +1,5 @@
 // Demo data (from docs/maquette.html). Used until each card gets its real source, and for screenshots.
 export const demo = {
-  notion: {
-    tasks: [
-      { title: "TD 4 — Couche transport", subject: "Réseaux", done: false },
-      { title: "Exercices transformée de Fourier", subject: "Signaux", done: false },
-      { title: "Lire le chapitre 3", subject: "Anglais", done: true },
-    ],
-    ds: { subject: "Électronique", when: "Jeudi 19 nov · J-4" },
-    health: { score: 78, label: "Bonne forme" },
-  },
   commands: [
     { label: "Trier le vault", subtitle: "Claude · Obsidian", enabled: true },
     { label: "gdsync", subtitle: "Synchro Google Drive", enabled: true },

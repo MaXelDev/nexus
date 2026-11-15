@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 NEXUS : dashboard plein écran Tauri v2 pour Fedora 44 (GNOME, Wayland). Spec complète : `PROMPT-NEXUS.md` (source de vérité, ne pas la recopier ici). Avancement et décisions : `docs/PROGRESS.md` — lire en premier après un `/clear`.
 
 ## État
-Étapes 1-3 validées. Prochaine : étape 4 (Notion). Cartes encore factices : Notion, mails, Claude (`src/demo.ts`).
+Étapes 1-4 validées. Prochaine : étape 5 (Gmail, Zmail). Cartes encore factices : mails, Claude (`src/demo.ts`).
 
 ## Stack
 - Backend Rust (Tauri v2, `tauri-plugin-single-instance`, secrets via `secret-tool` (src-tauri/src/secrets.rs)).

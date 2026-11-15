@@ -31,27 +31,78 @@ const head = (icon: string, title: string, aside = "") =>
 
 // ---------- cards ----------
 
-function renderNotion(d: Data["notion"]) {
+// Last good values survive restarts (shown instantly on open, then refreshed).
+const cache = {
+  get<T>(k: string): T | undefined {
+    try { return JSON.parse(localStorage.getItem(k) ?? "null") ?? undefined; } catch { return undefined; }
+  },
+  set(k: string, v: unknown) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable: memory only */ }
+  },
+};
+/** undefined = not loaded yet, null = disabled in config, string = error message. */
+type Slot<T> = T | null | undefined | string;
+
+type NotionData = {
+  tasks: { title: string; subject: string; done: boolean }[];
+  exam: { title: string; date: string } | null;
+  health: { score: number; days: number } | null;
+};
+
+const EXAM_DAY = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "short" });
+/** "jeudi 19 nov. · J-4" style countdown, from a Notion date ("YYYY-MM-DD" or full ISO). */
+export function examWhen(date: string, now = new Date()) {
+  const d = new Date(date.length === 10 ? `${date}T00:00` : date);
+  const days = Math.round((new Date(d).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 864e5);
+  const label = EXAM_DAY.format(d).replace(".", "");
+  return `${label[0].toUpperCase()}${label.slice(1)} · ${days === 0 ? "aujourd'hui" : `J-${days}`}`;
+}
+// Same thresholds as the Notion health dashboard.
+const healthLabel = (s: number) => (s >= 80 ? "Bonne forme" : s >= 60 ? "Correct" : "À surveiller");
+
+function renderNotion(d: Slot<NotionData>) {
+  const card = $("notion");
+  card.hidden = d === null;
+  if (!d || typeof d === "string") {
+    card.innerHTML = `${head(ICON.notion, "Notion")}<div class="error">${d ? "Notion indisponible" : "Chargement…"}</div>`;
+    return;
+  }
   const tasks = d.tasks.map((t) => `
     <div class="nx-pill task${t.done ? " done" : ""}">
       <span class="dot${t.done ? " hollow" : ""}"></span>
       <div style="min-width:0"><div class="title">${esc(t.title)}</div><div class="muted">${esc(t.subject)}</div></div>
-    </div>`).join("");
-  const pct = Math.max(0, Math.min(100, d.health.score));
-  $("notion").innerHTML = `
+    </div>`).join("") || `<div class="error">Aucun devoir aujourd'hui</div>`;
+  const exam = d.exam
+    ? `<div class="ds-subject">${esc(d.exam.title)}</div><div class="ds-when">${esc(examWhen(d.exam.date))}</div>`
+    : `<div class="ds-subject">Aucun DS prévu</div>`;
+  const h = d.health;
+  const pct = h ? Math.max(0, Math.min(100, h.score)) : 0;
+  const health = h ? `
+      <div class="nx-pill health">
+        <div class="ring" style="background:conic-gradient(#8AB4F8 0 ${pct}%, rgba(255,255,255,0.10) ${pct}% 100%)"><div>${h.score}</div></div>
+        <div><div class="muted">Santé globale</div><div class="health-label">${healthLabel(h.score)}</div></div>
+      </div>` : "";
+  card.innerHTML = `
     ${head(ICON.notion, "Notion", `<span class="aside">Aujourd'hui</span>`)}
     <div class="list">${tasks}</div>
-    <div class="row2">
-      <div class="nx-pill">
-        <div class="muted">Prochain DS</div>
-        <div class="ds-subject">${esc(d.ds.subject)}</div>
-        <div class="ds-when">${esc(d.ds.when)}</div>
-      </div>
-      <div class="nx-pill health">
-        <div class="ring" style="background:conic-gradient(#8AB4F8 0 ${pct}%, rgba(255,255,255,0.10) ${pct}% 100%)"><div>${esc(d.health.score)}</div></div>
-        <div><div class="muted">Santé globale</div><div class="health-label">${esc(d.health.label)}</div></div>
-      </div>
-    </div>`;
+    <div class="row2"><div class="nx-pill"><div class="muted">Prochain DS</div>${exam}</div>${health}</div>`;
+}
+
+let notion: Slot<NotionData> = cache.get<NotionData>("nx-notion");
+const isoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+async function refreshNotion() {
+  const now = new Date();
+  try {
+    notion = await invoke<NotionData | null>("notion", {
+      today: isoDate(now),
+      since: isoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)),
+    });
+    if (notion) cache.set("nx-notion", notion);
+  } catch (e) {
+    console.error(e);
+    if (!notion || typeof notion === "string") notion = String(e);
+  }
+  renderNotion(notion);
 }
 
 type Cmd = { label: string; subtitle: string; enabled: boolean; indicator?: boolean | null };
@@ -119,9 +170,6 @@ function renderApps(d: App[]) {
 type Weather = { temp: number; code: number; is_day: boolean; min: number; max: number; rain: number | null; place: string };
 type Dep = { line: string; direction: string; at: string };
 type Board = { stop: string; departures: Dep[] };
-/** undefined = not loaded yet, null = disabled in config, string = error message. */
-type Slot<T> = T | null | undefined | string;
-
 const WX_ICON = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
@@ -192,15 +240,6 @@ function renderWeather(w: Slot<Weather>, b: Slot<Board>) {
   card.innerHTML = top + (top && bottom ? `<div class="sep"></div>` : "") + bottom;
 }
 
-// Last good values survive restarts (shown instantly on open, then refreshed).
-const cache = {
-  get<T>(k: string): T | undefined {
-    try { return JSON.parse(localStorage.getItem(k) ?? "null") ?? undefined; } catch { return undefined; }
-  },
-  set(k: string, v: unknown) {
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable: memory only */ }
-  },
-};
 let wx: Slot<Weather> = cache.get<Weather>("nx-weather");
 let board: Slot<Board> = cache.get<Board>("nx-board");
 let wxAt = 0;
@@ -260,7 +299,7 @@ function renderClaude(d: Data["claude"]) {
 }
 
 function render(d: Data) {
-  renderNotion(d.notion);
+  renderNotion(notion);
   renderCommands(d.commands);
   renderClock();
   renderApps(d.apps);
@@ -297,6 +336,7 @@ const refreshCommands = () => invoke<Cmd[]>("command_states").then(renderCommand
 let timers: number[] = [];
 const WEATHER_EVERY = 30 * 60_000;
 const BOARD_EVERY = 30_000;
+const NOTION_EVERY = 5 * 60_000;
 
 function open() {
   closing = false;
@@ -305,8 +345,9 @@ function open() {
   renderWeather(wx, board);
   if (Date.now() - wxAt > WEATHER_EVERY) refreshWeather();
   refreshBoard();
+  refreshNotion();
   timers.forEach(clearInterval);
-  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY)];
+  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY)];
   play("normal");
 }
 async function close() {
