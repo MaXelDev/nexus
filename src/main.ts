@@ -8,9 +8,7 @@ import "@fontsource/space-grotesk/latin-700.css";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { demo } from "./demo";
 
-type Data = typeof demo;
 const $ = (id: string) => document.getElementById(id)!;
 
 /** Escape text coming from outside (mails, Notion…) before putting it in HTML. */
@@ -319,26 +317,57 @@ async function refreshMails() {
   }
 }
 
-function renderClaude(d: Data["claude"]) {
-  const meter = (label: string, m: { pct: number; reset: string }) => `
-    <div>
-      <div class="meter-head"><span>${label}</span><b>${m.pct} %</b></div>
-      <div class="bar"><div style="width:${Math.min(100, m.pct)}%"></div></div>
-      <div class="reset">${esc(m.reset)}</div>
-    </div>`;
-  $("claude").innerHTML = `${head(ICON.claude, "Utilisation Claude")}${meter("Session (5 h)", d.session)}${meter("Semaine", d.week)}`;
+type Usage = { session: { pct: number; resets_at: string | null }; week: { pct: number; resets_at: string | null } };
+let usage: Slot<Usage> = cache.get<Usage>("nx-claude");
+
+const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "long" });
+/** "Réinitialisation dans 2 h 10" under a day, "Réinitialisation lundi à 15 h" beyond. */
+export function resetText(iso: string | null, now = Date.now()) {
+  if (!iso) return "";
+  const t = new Date(iso);
+  const min = Math.max(0, Math.round((t.getTime() - now) / 60000));
+  if (min < 60) return `Réinitialisation dans ${min} min`;
+  if (min < 24 * 60) return `Réinitialisation dans ${Math.floor(min / 60)} h ${pad(min % 60)}`;
+  return `Réinitialisation ${WEEKDAY.format(t)} à ${t.getHours()} h`;
 }
 
-function render(d: Data) {
+function renderClaude(d: Slot<Usage>) {
+  const card = $("claude");
+  card.hidden = d === null;
+  if (!d || typeof d === "string") {
+    card.innerHTML = `${head(ICON.claude, "Utilisation Claude")}<div class="error">${d ? "Indisponible" : "Chargement…"}</div>`;
+    return;
+  }
+  const meter = (label: string, m: Usage["session"]) => `
+    <div>
+      <div class="meter-head"><span>${label}</span><b>${Math.round(m.pct)} %</b></div>
+      <div class="bar"><div style="width:${Math.min(100, Math.max(0, m.pct))}%"></div></div>
+      <div class="reset">${esc(resetText(m.resets_at))}</div>
+    </div>`;
+  card.innerHTML = `${head(ICON.claude, "Utilisation Claude")}${meter("Session (5 h)", d.session)}${meter("Semaine", d.week)}`;
+}
+
+async function refreshClaude() {
+  try {
+    usage = await invoke<Usage | null>("claude_usage");
+    if (usage) cache.set("nx-claude", usage);
+  } catch (e) {
+    console.error(e);
+    usage = String(e); // an old percentage would be misleading
+  }
+  renderClaude(usage);
+}
+
+/** First paint: cached values where we have them, "loading" elsewhere. */
+function render() {
   renderNotion(notion);
-  renderCommands(d.commands);
+  renderCommands([]);
   renderClock();
-  renderApps(d.apps);
+  renderApps([]);
   renderWeather(wx, board);
   renderMails(mailboxes);
-  renderClaude(d.claude);
+  renderClaude(usage);
 }
-
 // ---------- open / close animation ----------
 
 const EASE = "cubic-bezier(.16,1,.3,1)";
@@ -369,6 +398,7 @@ const WEATHER_EVERY = 30 * 60_000;
 const BOARD_EVERY = 30_000;
 const NOTION_EVERY = 5 * 60_000;
 const MAIL_EVERY = 2 * 60_000;
+const CLAUDE_EVERY = 5 * 60_000;
 
 function open() {
   closing = false;
@@ -379,8 +409,9 @@ function open() {
   refreshBoard();
   refreshNotion();
   refreshMails();
+  refreshClaude();
   timers.forEach(clearInterval);
-  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY), setInterval(refreshMails, MAIL_EVERY)];
+  timers = [setInterval(refreshWeather, WEATHER_EVERY), setInterval(refreshBoard, BOARD_EVERY), setInterval(refreshNotion, NOTION_EVERY), setInterval(refreshMails, MAIL_EVERY), setInterval(refreshClaude, CLAUDE_EVERY)];
   play("normal");
 }
 async function close() {
@@ -411,7 +442,7 @@ function onPick(id: string, cmd: string) {
 // ---------- boot ----------
 
 async function boot() {
-  render(demo);
+  render();
   const a = await invoke<{ wallpaper: string | null; logo: string | null }>("appearance");
   if (a.wallpaper) $("wallpaper").style.backgroundImage = `url("${convertFileSrc(a.wallpaper)}")`;
   if (a.logo) { const img = $("logo") as HTMLImageElement; img.src = convertFileSrc(a.logo); img.hidden = false; }

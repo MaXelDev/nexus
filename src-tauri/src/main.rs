@@ -1,5 +1,6 @@
 // NEXUS backend. The window starts hidden; `nexus --toggle` (bound to a GNOME custom shortcut)
 // shows or hides it. Wayland apps cannot grab global shortcuts, hence this indirection.
+mod claude_usage;
 mod commands;
 mod config;
 mod launcher;
@@ -143,6 +144,11 @@ fn open_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn claude_usage() -> Result<Option<claude_usage::Usage>, String> {
+    tauri::async_runtime::spawn_blocking(|| claude_usage::fetch().transpose()).await.map_err(|e| e.to_string())?
+}
+
 /// Tell the frontend when a drive is (un)mounted, so path-dependent buttons update without polling.
 fn watch_mounts(app: &AppHandle) {
     let monitor = gio::VolumeMonitor::get();
@@ -163,7 +169,7 @@ fn main() {
                 }
             }
         }))
-        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url])
+        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command, weather, departures, notion, mails, open_url, claude_usage])
         .setup(|app| {
             watch_mounts(app.handle());
             // First launch with --toggle (no instance running yet): show right away.
