@@ -59,7 +59,7 @@ fn gmail_token() -> Result<String, String> {
         ("client_secret", secrets::get("gmail_client_secret")?),
         ("refresh_token", secrets::get("gmail_refresh_token")?),
     ];
-    let v: Value = ureq::post("https://oauth2.googleapis.com/token")
+    let v: Value = crate::http::AGENT.post("https://oauth2.googleapis.com/token")
         .send_form(form.iter().map(|(k, v)| (*k, v.as_str())))
         .and_then(|mut r| r.body_mut().read_json())
         .map_err(|e| format!("jeton Gmail refusé : {e}"))?;
@@ -67,7 +67,7 @@ fn gmail_token() -> Result<String, String> {
 }
 
 fn gmail_get(token: &str, url: &str) -> Result<Value, String> {
-    ureq::get(url)
+    crate::http::AGENT.get(url)
         .header("Authorization", &format!("Bearer {token}"))
         .call()
         .and_then(|mut r| r.body_mut().read_json())

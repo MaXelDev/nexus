@@ -34,7 +34,7 @@ pub struct Notion {
 }
 
 fn query(token: &str, db: &str, body: Value) -> Result<Vec<Value>, String> {
-    let mut r = ureq::post(&format!("https://api.notion.com/v1/databases/{db}/query"))
+    let mut r = crate::http::AGENT.post(&format!("https://api.notion.com/v1/databases/{db}/query"))
         .header("Authorization", &format!("Bearer {token}"))
         .header("Notion-Version", "2022-06-28")
         .send_json(body)

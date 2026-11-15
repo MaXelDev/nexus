@@ -38,7 +38,7 @@ fn fetch_with(credentials: &str) -> Result<Usage, String> {
     if oauth["expiresAt"].as_f64().is_some_and(|exp| exp < now_ms) {
         return Err("jeton Claude expiré (relancer Claude Code)".into());
     }
-    let v: Value = ureq::get("https://api.anthropic.com/api/oauth/usage")
+    let v: Value = crate::http::AGENT.get("https://api.anthropic.com/api/oauth/usage")
         .header("Authorization", &format!("Bearer {token}"))
         .header("anthropic-beta", "oauth-2025-04-20")
         .call()

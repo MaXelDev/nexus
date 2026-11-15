@@ -1,7 +1,7 @@
 // Run with `npm test` (Node's built-in runner, TypeScript types stripped by Node).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { esc, examWhen, healthLabel, isoWeek, resetText, tramRows, wmo } from "./format.ts";
+import { ago, esc, examWhen, healthLabel, isoWeek, resetText, tramRows, wmo } from "./format.ts";
 
 test("esc neutralises HTML from mail subjects and Notion titles", () => {
   assert.equal(esc(`<img src=x onerror="alert(1)">'&`), "&#60;img src=x onerror=&#34;alert(1)&#34;&#62;&#39;&#38;");
@@ -55,4 +55,10 @@ test("resetText switches from countdown to weekday after 24 h", () => {
   assert.equal(resetText("2026-11-15T16:59:00+00:00", now), "Réinitialisation dans 10 min");
   assert.equal(resetText("2026-11-19T14:59:59+00:00", now), "Réinitialisation jeudi à 15 h");
   assert.equal(resetText(null, now), "");
+});
+
+test("ago rounds down to minutes, hours, days", () => {
+  const now = Date.parse("2026-11-15T18:00:00Z");
+  assert.deepEqual(["2026-11-15T17:59:30Z", "2026-11-15T17:55:00Z", "2026-11-15T15:00:00Z", "2026-11-13T17:00:00Z", "bad"].map((t) => ago(t, now)),
+    ["à l'instant", "il y a 5 min", "il y a 3 h", "il y a 2 j", "à l'instant"]);
 });

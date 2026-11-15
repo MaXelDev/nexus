@@ -14,13 +14,13 @@ fn base(cfg: &RelayCfg) -> Result<&str, String> {
 /// Last quota sent: only changes are pushed (the relay's KV allows 1,000 writes/day).
 static LAST_PUSH: Mutex<Option<String>> = Mutex::new(None);
 
-pub fn push_usage(cfg: &RelayCfg, usage: &impl Serialize) -> Result<(), String> {
-    let body = serde_json::to_string(usage).map_err(|e| e.to_string())?;
+/// `body` = the usage as JSON.
+pub fn push_usage(cfg: &RelayCfg, body: String) -> Result<(), String> {
     if LAST_PUSH.lock().unwrap().as_deref() == Some(body.as_str()) {
         return Ok(());
     }
     let token = secrets::get("relay_push_token")?;
-    ureq::post(&format!("{}/v1/claude-usage", base(cfg)?))
+    crate::http::AGENT.post(&format!("{}/v1/claude-usage", base(cfg)?))
         .header("Authorization", &format!("Bearer {token}"))
         .header("Content-Type", "application/json")
         .send(&body)
@@ -39,7 +39,7 @@ pub struct PairQr {
 pub fn pair(cfg: &RelayCfg) -> Result<PairQr, String> {
     let url = base(cfg)?;
     let token = secrets::get("relay_admin_token")?;
-    let v: serde_json::Value = ureq::post(&format!("{url}/v1/pair"))
+    let v: serde_json::Value = crate::http::AGENT.post(&format!("{url}/v1/pair"))
         .header("Authorization", &format!("Bearer {token}"))
         .send_empty()
         .and_then(|mut r| r.body_mut().read_json())

@@ -47,7 +47,7 @@ fn fetch_tcl(cfg: &TransportCfg) -> Result<Vec<Departure>, String> {
         let url = format!(
             "https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclpassagearret/all.json?field=id&value={id}&maxfeatures=100"
         );
-        let r: TclResp = ureq::get(&url)
+        let r: TclResp = crate::http::AGENT.get(&url)
             .header("Authorization", &auth)
             .call()
             .and_then(|mut r| r.body_mut().read_json())

@@ -3,6 +3,7 @@
 mod claude_usage;
 mod commands;
 mod config;
+mod http;
 mod launcher;
 mod mail;
 mod notion;
@@ -150,11 +151,14 @@ fn open_url(url: String) -> Result<(), String> {
 async fn claude_usage() -> Result<Option<claude_usage::Usage>, String> {
     tauri::async_runtime::spawn_blocking(|| {
         let usage = claude_usage::fetch().transpose()?;
-        // Forward to the relay for the phone; a relay problem never hides the PC card.
+        // Forward to the relay for the phone, on its own thread: the PC card never waits for it.
         if let (Some(u), Some(r)) = (&usage, config::load().relay) {
-            if let Err(e) = relay::push_usage(&r, u) {
-                eprintln!("nexus: {e}");
-            }
+            let body = serde_json::to_string(u).map_err(|e| e.to_string())?;
+            std::thread::spawn(move || {
+                if let Err(e) = relay::push_usage(&r, body) {
+                    eprintln!("nexus: {e}");
+                }
+            });
         }
         Ok(usage)
     })

@@ -75,3 +75,11 @@ export function resetText(iso: string | null, now = Date.now()) {
   if (min < 24 * 60) return `Réinitialisation dans ${Math.floor(min / 60)} h ${pad(min % 60)}`;
   return `Réinitialisation ${WEEKDAY.format(t)} à ${t.getHours()} h`;
 }
+
+/** Age of a piece of data, French: "à l'instant", "il y a 5 min", "il y a 3 h", "il y a 2 j". */
+export function ago(iso: string, now = Date.now()) {
+  const m = Math.floor((now - Date.parse(iso)) / 60000);
+  if (!(m >= 1)) return "à l'instant";
+  if (m < 60) return `il y a ${m} min`;
+  return m < 1440 ? `il y a ${Math.floor(m / 60)} h` : `il y a ${Math.floor(m / 1440)} j`;
+}

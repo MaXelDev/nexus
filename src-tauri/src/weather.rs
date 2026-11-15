@@ -37,7 +37,7 @@ pub fn fetch(cfg: &WeatherCfg) -> Result<Weather, String> {
          &daily=temperature_2m_min,temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=1",
         cfg.latitude, cfg.longitude
     );
-    let r: Resp = ureq::get(&url)
+    let r: Resp = crate::http::AGENT.get(&url)
         .call()
         .and_then(|mut r| r.body_mut().read_json())
         .map_err(|e| format!("Open-Meteo : {e}"))?;
