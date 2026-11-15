@@ -54,29 +54,61 @@ function renderNotion(d: Data["notion"]) {
     </div>`;
 }
 
-function renderCommands(d: Data["commands"]) {
-  const btns = d.map((c) => `
-    <button class="nx-pill nx-btn cmd${c.wide ? " wide" : ""}" type="button"${c.enabled ? "" : " disabled"}>
-      <span class="label">${c.indicator === undefined ? "" : `<span class="dot ${c.indicator ? "ok" : "off"}"></span>`}${esc(c.label)}</span>
+type Cmd = { label: string; subtitle: string; enabled: boolean; indicator?: boolean | null };
+function renderCommands(d: Cmd[]) {
+  // An odd last button spans both columns, like "Sauvegarde Lexar" in the mockup.
+  const btns = d.map((c, i) => `
+    <button class="nx-pill nx-btn cmd${d.length % 2 && i === d.length - 1 ? " wide" : ""}" type="button" data-i="${i}"${c.enabled ? "" : " disabled"}>
+      <span class="label">${c.indicator == null ? "" : `<span class="dot ${c.indicator ? "ok" : "off"}"></span>`}${esc(c.label)}</span>
       <span class="muted">${esc(c.subtitle)}</span>
     </button>`).join("");
   $("commands").innerHTML = `${head(ICON.term, "Commandes WezTerm")}<div class="cmds">${btns}</div>`;
 }
 
-function renderClock(c: Data["clock"]) {
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    `<span class="${i < c.hour ? "past" : i === c.hour ? "now" : ""}"></span>`).join("");
+// Clock: DOM built once, then only text/classes change each second (keeps the colon fade smooth).
+function renderClock() {
   $("clock").innerHTML = `
-    <div class="time"><span>${c.hh}</span><span class="colon">:</span><span>${c.mm}</span><span class="secs">${c.ss}</span></div>
-    <div class="date">${esc(c.date)}</div>
-    <div class="hours" aria-hidden="true">${hours}</div>
-    <div class="scale"><span>0 h</span><span>Semaine ${c.week}</span><span>24 h</span></div>`;
+    <div class="time"><span id="hh"></span><span class="colon" id="colon">:</span><span id="mm"></span><span class="secs" id="ss"></span></div>
+    <div class="date" id="date"></div>
+    <div class="hours" id="hours" aria-hidden="true">${"<span></span>".repeat(24)}</div>
+    <div class="scale"><span>0 h</span><span id="week"></span><span>24 h</span></div>`;
 }
 
-function renderApps(d: Data["apps"]) {
-  const btns = d.map((a) => `
-    <button class="nx-pill nx-btn app" type="button"${a.found ? "" : " disabled"}>
-      <span class="app-icon">${a.icon ? `<img src="${esc(a.icon)}" alt="">` : esc(a.name.slice(0, 2))}</span>
+/** ISO 8601 week number (weeks start Monday; week 1 contains the first Thursday). */
+export function isoWeek(d: Date) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  return Math.ceil(((t.getTime() - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+}
+
+const DATE_FR = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+const pad = (n: number) => String(n).padStart(2, "0");
+function tick() {
+  const n = new Date();
+  $("hh").textContent = pad(n.getHours());
+  $("mm").textContent = pad(n.getMinutes());
+  $("ss").textContent = pad(n.getSeconds());
+  $("colon").classList.toggle("off", n.getSeconds() % 2 === 1);
+  $("date").textContent = DATE_FR.format(n);
+  $("week").textContent = `Semaine ${isoWeek(n)}`;
+  [...$("hours").children].forEach((el, i) =>
+    (el.className = i < n.getHours() ? "past" : i === n.getHours() ? "now" : ""));
+}
+
+// Runs only while the window is visible: nothing ticks in the background.
+let clockTimer = 0;
+function startClock() {
+  stopClock();
+  tick();
+  clockTimer = setInterval(tick, 1000);
+}
+const stopClock = () => clearInterval(clockTimer);
+
+type App = { name: string; icon: string | null; found: boolean };
+function renderApps(d: App[]) {
+  const btns = d.map((a, i) => `
+    <button class="nx-pill nx-btn app" type="button" data-i="${i}"${a.found ? "" : " disabled"}>
+      <span class="app-icon">${a.icon ? `<img src="${esc(convertFileSrc(a.icon))}" alt="">` : esc(a.name.slice(0, 2))}</span>
       <span class="app-name">${esc(a.name)}</span>
     </button>`).join("");
   $("apps").innerHTML = `<h2>Applications</h2><div class="app-grid">${btns}</div>`;
@@ -131,7 +163,7 @@ function renderClaude(d: Data["claude"]) {
 function render(d: Data) {
   renderNotion(d.notion);
   renderCommands(d.commands);
-  renderClock(d.clock);
+  renderClock();
   renderApps(d.apps);
   renderWeather(d.weather, d.trams);
   renderMails(d.mails);
@@ -160,12 +192,35 @@ function play(direction: "normal" | "reverse") {
   return Promise.all([...slides, ...fades].map((a) => a.finished));
 }
 
-const open = () => { closing = false; play("normal"); };
+const refreshCommands = () => invoke<Cmd[]>("command_states").then(renderCommands, console.error);
+
+function open() {
+  closing = false;
+  startClock();
+  refreshCommands();
+  play("normal");
+}
 async function close() {
   if (closing) return;
   closing = true;
   await play("reverse");
-  if (closing) await invoke("hide"); // an `open` during the animation cancels the hide
+  if (!closing) return; // an `open` during the animation cancels the hide
+  stopClock();
+  await invoke("hide");
+}
+
+/** Clicks on [data-i] buttons inside `id` call `cmd` with that index, then close the dashboard. */
+function onPick(id: string, cmd: string) {
+  $(id).addEventListener("click", async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("button[data-i]");
+    if (!b || b.disabled) return;
+    try {
+      await invoke(cmd, { index: Number(b.dataset.i) });
+      close();
+    } catch (err) {
+      console.error(err);
+    }
+  });
 }
 
 // ---------- boot ----------
@@ -176,6 +231,10 @@ async function boot() {
   if (a.wallpaper) $("wallpaper").style.backgroundImage = `url("${convertFileSrc(a.wallpaper)}")`;
   if (a.logo) { const img = $("logo") as HTMLImageElement; img.src = convertFileSrc(a.logo); img.hidden = false; }
 
+  invoke<App[]>("apps").then(renderApps, console.error); // shortcut: resolved once at start, restart NEXUS after changing [[apps]]
+  onPick("apps", "launch_app");
+  onPick("commands", "run_command");
+  await listen("nx-mounts", refreshCommands);
   await listen("nx-open", open);
   await listen("nx-close", close);
   addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });

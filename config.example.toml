@@ -10,3 +10,37 @@ wallpaper_blur = true
 
 # Image shown faintly in the centre, behind the cards (jpg, png, svg). Leave missing for none.
 logo = "~/.config/nexus/logo.jpg"
+
+# ---------------------------------------------------------------------------
+# App launcher (3×3 grid, filled row by row). `desktop` = .desktop file name
+# without extension, searched in ~/.local/share/applications, XDG_DATA_DIRS
+# and the Flatpak exports. Tip: `ls /usr/share/applications`.
+# Missing apps are shown greyed out and logged.
+[[apps]]
+name = "Firefox"
+desktop = "org.mozilla.firefox"
+
+[[apps]]
+name = "Files"
+desktop = "org.gnome.Nautilus"
+
+[[apps]]
+name = "Terminal"
+desktop = "org.gnome.Ptyxis"
+
+# ---------------------------------------------------------------------------
+# Command buttons: each opens a new WezTerm window running `command` in your
+# interactive shell ($SHELL -ic, so aliases work), then stays on the shell.
+[[commands]]
+label = "Update system"
+subtitle = "dnf upgrade"
+command = "sudo dnf upgrade"
+
+[[commands]]
+label = "Backup to USB"
+subtitle = "Key detected · rsync"
+subtitle_unavailable = "Key not plugged in"
+# Enabled (green dot) only while this path exists; mount events update it live.
+requires_path = "/run/media/YOUR_USER/YOUR_KEY"
+command = "rsync -av ~/Documents/ /run/media/YOUR_USER/YOUR_KEY/Documents/"
+cwd = "~"

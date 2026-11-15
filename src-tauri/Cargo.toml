@@ -14,6 +14,9 @@ tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 toml = "0.9"
 url = "2"
+# Same versions Tauri already links (no extra build): icon theme lookup and mount events.
+gtk = "0.18"
+gio = "0.18"
 
 [profile.release]
 strip = true

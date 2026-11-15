@@ -10,13 +10,12 @@ export const demo = {
     health: { score: 78, label: "Bonne forme" },
   },
   commands: [
-    { label: "Trier le vault", subtitle: "Claude · Obsidian", enabled: true, wide: false, indicator: undefined as boolean | undefined },
-    { label: "gdsync", subtitle: "Synchro Google Drive", enabled: true, wide: false, indicator: undefined as boolean | undefined },
-    { label: "Sauvegarde Lexar", subtitle: "Clé détectée · rsync du vault", enabled: true, wide: true, indicator: true as boolean | undefined },
+    { label: "Trier le vault", subtitle: "Claude · Obsidian", enabled: true },
+    { label: "gdsync", subtitle: "Synchro Google Drive", enabled: true },
+    { label: "Sauvegarde Lexar", subtitle: "Clé détectée · rsync du vault", enabled: true, indicator: true },
   ],
-  clock: { hh: "11", mm: "52", ss: "14", date: "dimanche 15 novembre", hour: 11, week: 46 },
   apps: ["Firefox", "Claude", "Notion", "FNote", "Esound", "Obsidian", "VS Code", "WezTerm", "GitHub Desktop"]
-    .map((name) => ({ name, icon: "" as string, found: true })),
+    .map((name) => ({ name, icon: null as string | null, found: true })),
   weather: { temp: 9, desc: "Éclaircies", min: 5, max: 12, rain: 10, place: "Campus de la Doua" },
   trams: {
     stop: "INSA-Einstein",

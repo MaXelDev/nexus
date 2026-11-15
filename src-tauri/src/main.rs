@@ -1,10 +1,13 @@
 // NEXUS backend. The window starts hidden; `nexus --toggle` (bound to a GNOME custom shortcut)
 // shows or hides it. Wayland apps cannot grab global shortcuts, hence this indirection.
+mod commands;
 mod config;
+mod launcher;
 
 use std::path::PathBuf;
 use std::process::Command;
-use tauri::{Emitter, Manager, WebviewWindow};
+use gio::prelude::VolumeMonitorExt;
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 /// Show + play the opening animation, or ask the frontend to play the closing one.
 /// The frontend calls `hide` once its closing animation is done.
@@ -30,12 +33,22 @@ struct Appearance {
     logo: Option<PathBuf>,
 }
 
+/// Let the webview read exactly this file through the asset protocol (the static scope is empty,
+/// so nothing else in $HOME — keys, tokens — is ever reachable from the page).
+/// Returns the symlink-free path to load: Tauri's scope check rejects file symlinks,
+/// which icon themes use a lot (vscode.svg -> visual-studio-code.svg).
+fn expose(app: &AppHandle, path: PathBuf) -> PathBuf {
+    let real = path.canonicalize().unwrap_or(path);
+    let _ = app.asset_protocol_scope().allow_file(&real);
+    real
+}
+
 #[tauri::command]
-fn appearance() -> Appearance {
+fn appearance(app: AppHandle) -> Appearance {
     let cfg = config::load();
     Appearance {
-        wallpaper: if cfg.appearance.wallpaper_blur { current_wallpaper() } else { None },
-        logo: cfg.appearance.logo.map(config::expand_home).filter(|p| p.is_file()),
+        wallpaper: if cfg.appearance.wallpaper_blur { current_wallpaper() } else { None }.map(|p| expose(&app, p)),
+        logo: cfg.appearance.logo.map(config::expand_home).filter(|p| p.is_file()).map(|p| expose(&app, p)),
     }
 }
 
@@ -58,6 +71,42 @@ fn current_wallpaper() -> Option<PathBuf> {
     })
 }
 
+#[tauri::command]
+fn apps(app: AppHandle) -> Vec<launcher::App> {
+    let mut apps = launcher::resolve(&config::load().apps);
+    for a in &mut apps {
+        a.icon = a.icon.take().map(|p| expose(&app, p));
+    }
+    apps
+}
+
+#[tauri::command]
+fn launch_app(index: usize) -> Result<(), String> {
+    let cfg = config::load();
+    launcher::launch(cfg.apps.get(index).ok_or("app inconnue")?)
+}
+
+#[tauri::command]
+fn command_states() -> Vec<commands::CommandState> {
+    commands::states(&config::load().commands)
+}
+
+#[tauri::command]
+fn run_command(index: usize) -> Result<(), String> {
+    let cfg = config::load();
+    commands::run(cfg.commands.get(index).ok_or("commande inconnue")?)
+}
+
+/// Tell the frontend when a drive is (un)mounted, so path-dependent buttons update without polling.
+fn watch_mounts(app: &AppHandle) {
+    let monitor = gio::VolumeMonitor::get();
+    let (a, b) = (app.clone(), app.clone());
+    monitor.connect_mount_added(move |_, _| { let _ = a.emit("nx-mounts", ()); });
+    monitor.connect_mount_removed(move |_, _| { let _ = b.emit("nx-mounts", ()); });
+    // The monitor must outlive this function for the signals to keep firing.
+    std::mem::forget(monitor);
+}
+
 fn main() {
     tauri::Builder::default()
         // Must be the first plugin: a second `nexus` process exits immediately and its argv lands here.
@@ -68,8 +117,9 @@ fn main() {
                 }
             }
         }))
-        .invoke_handler(tauri::generate_handler![hide, appearance])
+        .invoke_handler(tauri::generate_handler![hide, appearance, apps, launch_app, command_states, run_command])
         .setup(|app| {
+            watch_mounts(app.handle());
             // First launch with --toggle (no instance running yet): show right away.
             if std::env::args().any(|a| a == "--toggle") {
                 if let Some(win) = app.get_webview_window("main") {

@@ -7,6 +7,30 @@ use std::path::PathBuf;
 #[serde(default)] // missing keys take the value from `Default`
 pub struct Config {
     pub appearance: Appearance,
+    pub apps: Vec<AppEntry>,
+    pub commands: Vec<CommandEntry>,
+}
+
+/// One launcher tile. `desktop` is the .desktop file name without extension (e.g. "org.mozilla.firefox").
+#[derive(Deserialize, Clone)]
+pub struct AppEntry {
+    pub name: String,
+    pub desktop: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct CommandEntry {
+    pub label: String,
+    #[serde(default)]
+    pub subtitle: String,
+    /// Run by the user's shell in interactive mode (aliases available).
+    pub command: String,
+    /// Working directory, `~` expanded. Defaults to home.
+    pub cwd: Option<String>,
+    /// Button is enabled only while this path exists (e.g. a mounted USB key).
+    pub requires_path: Option<String>,
+    /// Subtitle shown while `requires_path` is missing.
+    pub subtitle_unavailable: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -54,5 +78,13 @@ mod tests {
         let c: Config = toml::from_str("[appearance]\nwallpaper_blur = false\n").unwrap();
         assert!(!c.appearance.wallpaper_blur);
         assert!(c.appearance.logo.is_some());
+        assert!(c.apps.is_empty());
+    }
+
+    #[test]
+    fn example_config_parses() {
+        let c: Config = toml::from_str(include_str!("../../config.example.toml")).unwrap();
+        assert!(!c.apps.is_empty());
+        assert!(c.commands.iter().any(|x| x.requires_path.is_some()));
     }
 }
