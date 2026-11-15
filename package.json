@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "tauri": "tauri",
-    "test": "TZ=Europe/Paris node --test src/*.test.ts"
+    "test": "TZ=Europe/Paris node --test src/*.test.ts",
+    "mobile:dev": "vite --config mobile/vite.config.ts",
+    "mobile:build": "tsc --noEmit -p mobile && vite build --config mobile/vite.config.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

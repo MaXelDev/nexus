@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "NEXUS",
+  "version": "0.1.0",
+  "identifier": "io.github.nexus.mobile",
+  "build": {
+    "beforeDevCommand": "npm run mobile:dev",
+    "devUrl": "http://localhost:1430",
+    "beforeBuildCommand": "npm run mobile:build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [{ "title": "NEXUS", "label": "main" }],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["../../src-tauri/icons/32x32.png", "../../src-tauri/icons/128x128.png", "../../src-tauri/icons/icon.png"],
+    "android": { "minSdkVersion": 26 }
+  }
+}

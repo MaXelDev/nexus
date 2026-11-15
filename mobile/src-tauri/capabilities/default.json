@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "default",
+  "description": "The single NEXUS screen: core events only (relay and intents arrive in step 6).",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,105 @@
+/* NEXUS Android: values taken from docs/maquette-android.html (same glass and accent as the PC). */
+:root {
+  --accent: #8AB4F8;
+  --text: #f2f4f8;
+  --muted: #aab2c3;
+  --soft: #cfd6e6;
+  --ink: #0b0f1a;
+  --display: 'Space Grotesk', Inter, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: #05060a; }
+html, body { margin: 0; min-height: 100%; color: var(--text);
+  font-family: Inter, Roboto, system-ui, sans-serif; overscroll-behavior-y: contain; }
+[hidden] { display: none !important; }
+h2 { margin: 0; font-family: var(--display); font-weight: 600; }
+
+.bg { position: fixed; inset: 0; z-index: -1;
+  background: radial-gradient(circle at 15% 12%, #3a5fa8 0%, transparent 40%), radial-gradient(circle at 90% 45%, #6b3f8f 0%, transparent 38%),
+    radial-gradient(circle at 40% 90%, #1f7a74 0%, transparent 42%), #0b0f1a; }
+.bg::after { content: ""; position: absolute; inset: 0; background: rgba(4,6,12,0.55); }
+
+.stack { padding: max(36px, calc(env(safe-area-inset-top) + 12px)) 14px max(20px, calc(env(safe-area-inset-bottom) + 12px));
+  display: flex; flex-direction: column; gap: 10px; transition: transform .2s ease; }
+
+.nx-glass { background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 12px 32px rgba(0,0,0,0.36); border-radius: 22px; }
+.nx-pill { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; }
+.nx-btn { font: inherit; color: var(--text); cursor: pointer; }
+.nx-card { width: 100%; text-align: left; transition: transform .15s ease; }
+.nx-card:active, .tile:active, .dock button:active { transform: scale(.98); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.status { margin: 0 0 -2px; font-size: 11px; color: var(--muted); text-align: center; }
+.muted { font-size: 11px; color: var(--muted); }
+.aside { margin-left: auto; font-size: 11px; color: var(--muted); }
+.error { font-size: 12px; color: var(--muted); }
+
+/* Notion */
+.notion { padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+.notion .head { display: flex; align-items: center; gap: 8px; }
+.notion h2 { font-size: 15px; }
+.task { padding: 9px 12px; display: flex; align-items: center; gap: 10px; }
+.task .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.task .title { font-size: 13px; font-weight: 600; }
+.task.done { opacity: .55; }
+.task.done .title { text-decoration: line-through; }
+.duo { display: flex; gap: 9px; }
+.exam { flex: 1; padding: 10px 12px; min-width: 0; }
+.exam .name { font-size: 14px; font-weight: 600; margin-top: 3px; }
+.exam .when { font-size: 12px; color: var(--accent); margin-top: 2px; font-weight: 600; }
+.health { flex: 1; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+.ring { width: 44px; height: 44px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; }
+.ring > div { width: 34px; height: 34px; border-radius: 50%; background: #121725; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; }
+.health .label { font-size: 12px; font-weight: 600; margin-top: 2px; }
+
+/* Weather */
+.weather { padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.temp { font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1; }
+.wx { font-size: 11px; color: var(--soft); }
+
+/* Trams */
+.trams { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.tram { padding: 7px 8px; display: flex; align-items: center; gap: 7px; min-width: 0; }
+.line { width: 24px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; background: var(--accent); color: var(--ink); flex: none; }
+.dest { font-size: 11px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--soft); }
+.next { font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+/* Mails + Claude */
+.row { display: flex; gap: 10px; }
+.small { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.small h2 { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.tiles { display: flex; gap: 6px; }
+.tile { flex: 1; min-height: 52px; padding: 6px 8px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.tile .n { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1; }
+.tile .k { font-size: 10px; font-weight: 600; margin-top: 3px; }
+.tile.urgent { background: rgba(255,155,138,0.10); border-color: rgba(255,155,138,0.28); }
+.tile.urgent .n { color: #ffb3a6; }
+.tile.todo { background: rgba(138,180,248,0.10); border-color: rgba(138,180,248,0.28); }
+.tile.todo .n { color: var(--accent); }
+.meter .top { display: flex; justify-content: space-between; font-size: 10px; color: var(--soft); }
+.meter .top b { color: var(--text); }
+.bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.10); margin-top: 4px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--accent); }
+
+/* Dock */
+.dock { padding: 10px 14px; display: flex; justify-content: space-around; }
+.dock button { background: none; border: none; padding: 2px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 44px; }
+.dock .ico { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); }
+.dock .lbl { font-size: 10px; font-weight: 500; color: var(--soft); }
+
+@media (prefers-reduced-motion: reduce) { .stack, .nx-card { transition: none; } }
+.age { font-size: 9px; color: var(--muted); margin-top: -2px; }
+
+/* Refresh spinner: follows the pull, then spins while the data loads. */
+.spin { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 8px); width: 26px; height: 26px; margin-left: -13px; z-index: 1;
+  border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.15); border-top-color: var(--accent); opacity: 0; pointer-events: none; }
+.stack.loading { transform: translateY(44px); } /* room for the spinner above the first card */
+.spin.on { opacity: 1 !important; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEXUS</title>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<div id="spin" class="spin" aria-hidden="true"></div>
+<main id="app" class="stack">
+  <p id="status" class="status" role="status" hidden></p>
+  <button id="notion" class="nx-glass nx-btn nx-card notion" type="button" data-open="notion" aria-label="Ouvrir Notion"></button>
+  <button id="weather" class="nx-glass nx-btn nx-card weather" type="button" data-open="weather" aria-label="Ouvrir la météo"></button>
+  <section id="trams" class="nx-glass trams" aria-label="Prochains trams"></section>
+  <div class="row">
+    <section id="mails" class="nx-glass small" aria-label="Mails"></section>
+    <section id="claude" class="nx-glass small" aria-label="Utilisation Claude"></section>
+  </div>
+  <nav id="dock" class="nx-glass dock" aria-label="Raccourcis"></nav>
+</main>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "nexus-mobile",
+  "private": true,
+  "//": "Tauri's Android Gradle task runs `npm run tauri` from this folder: without this file npm would use the PC app's root package.json.",
+  "scripts": {
+    "tauri": "tauri",
+    "mobile:dev": "npm --prefix .. run mobile:dev",
+    "mobile:build": "npm --prefix .. run mobile:build"
+  }
+}
