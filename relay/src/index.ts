@@ -92,6 +92,7 @@ const ROUTES: Record<string, { method: string; rl: "RL" | "RL_PAIR" | "RL_PUSH" 
   "/v1/claude-usage": { method: "POST", rl: "RL_PUSH" },
   "/v1/pair": { method: "POST", rl: "RL_PAIR" },
   "/v1/pair/claim": { method: "POST", rl: "RL_PAIR" },
+  "/v1/device": { method: "DELETE", rl: "RL_PAIR" },
 };
 
 async function route(req: Request, env: Env, path: string): Promise<Response> {
@@ -111,6 +112,13 @@ async function route(req: Request, env: Env, path: string): Promise<Response> {
     case "/v1/claude-usage":
       if (!(await isPcToken(token, env.PUSH_TOKEN_SHA256))) return fail(401, "unauthorized");
       return claudeUsage(req, env);
+    case "/v1/device": { // "forget this phone": a device can only revoke itself
+      const name = await deviceOf(token, env.KV);
+      if (!name) return fail(401, "unauthorized");
+      await env.KV.delete(`dev:${await sha256hex(token!)}`);
+      await env.KV.delete(`devname:${name}`);
+      return new Response(null, { status: 204, headers: HEADERS });
+    }
     case "/v1/pair":
       if (!(await isPcToken(token, env.ADMIN_TOKEN_SHA256))) return fail(401, "unauthorized");
       return pair(env);

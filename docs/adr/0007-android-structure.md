@@ -1,5 +1,5 @@
 # ADR 0007 — Structure de l'appli Android (Tauri v2)
-Statut : proposé (2026-11-15)
+Statut : accepté (2026-11-15)
 
 ## Contexte
 La spec demande Tauri v2 cible Android « dans le même projet », en réutilisant le CSS et les composants du PC. Le backend PC est lié au bureau (GTK, GIO, `secret-tool`, `gtk-launch`, IMAP direct) ; le mobile n'a besoin que d'un appel HTTPS au relais, du Keystore et d'intents.

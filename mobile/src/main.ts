@@ -7,6 +7,8 @@ import "@fontsource/inter/latin-700.css";
 import "@fontsource/space-grotesk/latin-500.css";
 import "@fontsource/space-grotesk/latin-600.css";
 import "./style.css";
+import { invoke } from "@tauri-apps/api/core";
+import { Format, scan } from "@tauri-apps/plugin-barcode-scanner";
 import { ago, esc, examWhen, healthLabel, pad, tramRows, wmo, type Dep } from "../../src/format";
 import { ICON, svg, WX_ICON } from "../../src/icons";
 
@@ -26,6 +28,7 @@ const $ = (id: string) => document.getElementById(id)!;
 const isErr = (v: unknown): v is Err => !!v && typeof v === "object" && "error" in v;
 let data: Summary | null = null;
 let failedAt: number | null = null;
+let unpaired = false;
 
 // ---------- render ----------
 function renderNotion(n: Summary["notion"]) {
@@ -111,8 +114,9 @@ function renderDock() {
 
 function renderStatus() {
   const s = $("status");
-  s.hidden = failedAt === null;
-  if (data && failedAt !== null) {
+  s.hidden = failedAt === null && !unpaired;
+  if (unpaired) s.textContent = "Téléphone non appairé · Réglages";
+  else if (data && failedAt !== null) {
     const d = new Date(data.generated_at);
     s.textContent = `Relais injoignable · données de ${pad(d.getHours())}h${pad(d.getMinutes())}`;
   } else if (failedAt !== null) s.textContent = "Relais injoignable";
@@ -132,18 +136,25 @@ function render() {
 // ---------- data ----------
 const CACHE = "nx-summary";
 
-/** Step 5: demo data. Step 6 swaps this for the Rust command that calls the relay. */
+const inTauri = "__TAURI_INTERNALS__" in window;
+
 async function fetchSummary(): Promise<Summary> {
-  const { demo } = await import("../../src/demo");
-  return {
-    generated_at: new Date().toISOString(),
-    notion: demo.notion,
-    weather: { ...demo.weather, place: "La Doua" },
-    board: demo.board,
-    mail: { urgent: 2, a_traiter: 3, partial: false },
-    claude: { ...demo.claude, updated_at: new Date().toISOString() },
-    links: {},
-  };
+  // `npm run mobile:dev` in a desktop browser: demo data (dropped from the APK build).
+  if (import.meta.env.DEV && !inTauri) {
+    const { demo } = await import("../../src/demo");
+    const now = new Date().toISOString();
+    return { generated_at: now, notion: demo.notion, weather: { ...demo.weather, place: "La Doua" }, board: demo.board,
+      mail: { urgent: 2, a_traiter: 3, partial: false }, claude: { ...demo.claude, updated_at: now }, links: {} };
+  }
+  return invoke<Summary>("summary"); // Rust holds the token and calls the relay
+}
+
+/** Not paired any more (revoked or forgotten): its data must not stay on screen or in the cache. */
+function dropData() {
+  unpaired = true;
+  data = null;
+  try { localStorage.removeItem(CACHE); } catch {}
+  for (const id of ["notion", "weather", "trams", "mails", "claude"]) $(id).hidden = true;
 }
 
 let loading = false;
@@ -159,9 +170,12 @@ async function refresh() {
     if (data) for (const k of ["notion", "weather", "board", "mail"] as const) if (isErr(fresh[k]) && !isErr(data[k])) (fresh as any)[k] = data[k];
     data = fresh;
     failedAt = null;
+    unpaired = false;
     try { localStorage.setItem(CACHE, JSON.stringify(data)); } catch {}
-  } catch {
-    failedAt = Date.now();
+  } catch (e) {
+    if (e === "unpaired") {
+      dropData();
+    } else failedAt = Date.now();
   } finally {
     loading = false;
     render();
@@ -171,9 +185,11 @@ async function refresh() {
 }
 
 // ---------- interactions ----------
-function onOpen(target: string) {
-  // Step 6: Android intents via the Kotlin plugin (targets from data.links).
-  console.log("open", target);
+const LINKS: Record<string, string> = { camera: "camera" }; // the rest comes from the relay config
+
+function onOpen(key: string) {
+  const target = data?.links[key] ?? LINKS[key];
+  if (target) invoke("open", { target }).catch(() => {});
 }
 document.addEventListener("click", (e) => {
   const b = (e.target as HTMLElement).closest<HTMLElement>("[data-open]");
@@ -200,10 +216,74 @@ addEventListener("touchend", () => {
   $("spin").style.opacity = $("spin").style.transform = "";
 });
 
+// ---------- settings (FLAG_SECURE while shown; Android back closes it) ----------
+const msg = (t: string) => { $("settings-msg").textContent = t; };
+
+async function openSettings() {
+  if (!$("settings").hidden) return;
+  history.pushState({ settings: true }, "");
+  invoke("secure", { on: true }).catch(() => {});
+  msg("");
+  await showPairState();
+  $("settings").hidden = false;
+}
+
+function closeSettings() {
+  $("settings").hidden = true;
+  invoke("secure", { on: false }).catch(() => {});
+}
+
+async function showPairState() {
+  const relay = await invoke<string | null>("paired_relay").catch(() => null);
+  $("paired").hidden = !relay;
+  $("unpaired").hidden = !!relay;
+  if (relay) $("relay-host").textContent = new URL(relay).host;
+}
+
+$("open-settings").addEventListener("click", openSettings);
+$("status").addEventListener("click", () => (unpaired ? openSettings() : refresh()));
+$("close-settings").addEventListener("click", () => history.back());
+addEventListener("popstate", () => { if (!$("settings").hidden) closeSettings(); });
+
+$("unpaired").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const device = ($("device") as HTMLInputElement).value.trim();
+  msg("");
+  let link: string;
+  try {
+    link = (await scan({ formats: [Format.QRCode] })).content;
+  } catch {
+    return msg("Scan annulé. Autorise l'appareil photo si Android le demande.");
+  }
+  try {
+    msg("Appairage…");
+    await invoke("pair", { link, device });
+    msg("Téléphone appairé.");
+    await showPairState();
+    refresh();
+  } catch (err) {
+    msg(String(err));
+  }
+});
+
+$("forget").addEventListener("click", async () => {
+  if (!confirm("Oublier ce téléphone ? Il faudra l'appairer de nouveau.")) return;
+  try {
+    await invoke("forget");
+    dropData();
+    render();
+    await showPairState();
+    msg("Ce téléphone est oublié.");
+  } catch (err) {
+    msg(String(err));
+  }
+});
+
 // Refresh on open and when the app comes back to the foreground; never in the background.
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refresh(); });
 
 try { data = JSON.parse(localStorage.getItem(CACHE) ?? "null"); } catch {}
+if (inTauri) invoke("secure", { on: false }).catch(() => {}); // a reload while settings were open must not keep it
 renderDock();
 render(); // cached values first, instantly
 refresh();

@@ -70,6 +70,9 @@ Corps : `{"code": "…", "device": "Pixel de Max"}` (nom 1-40 car., lettres, chi
 → `201 {"token": "nxd_…", "device": "…"}` ; le code est supprimé. Code inconnu, expiré ou déjà utilisé → `401` (pas de distinction). Nom déjà pris → `409`.
 Le jeton n'apparaît qu'une fois, dans cette réponse.
 
+### `DELETE /v1/device` — appareil
+« Oublier ce téléphone » : un appareil ne peut révoquer **que lui-même**. → `204` ; supprime `dev:<hash>` et `devname:<nom>`. Jeton absent ou invalide → `401`. Limite : celle de l'appairage (5 / min).
+
 ## Mails INSA (service binding)
 `wrangler.toml` : `[[services]] binding = "INSA_MAIL", service = "insa-mail-mcp", entrypoint = "MailCounts"`. Appel : `await env.INSA_MAIL.counts()` → `{ urgent, a_traiter }`. Aucune autre méthode exposée par cet entrypoint.
 
@@ -84,8 +87,8 @@ Par route et par IP, vérifiée **avant** toute lecture KV (le trafic parasite n
 | Route | Limite |
 |---|---|
 | `/v1/summary` | 30 / min |
-| `/v1/pair`, `/v1/pair/claim` | 5 / min (étape 4) |
-| `/v1/claude-usage` | 12 / min (étape 4) |
+| `/v1/pair`, `/v1/pair/claim`, `/v1/device` | 5 / min |
+| `/v1/claude-usage` | 12 / min |
 
 ## Cache (mémoire de l'isolat, par section, partagé entre appareils)
 | Section | Durée |

@@ -1,5 +1,5 @@
 # ADR 0004 — Relais Cloudflare pour le mobile
-Statut : proposé (2026-11-15)
+Statut : accepté (2026-11-15)
 
 ## Contexte
 Le téléphone doit afficher Notion, météo, trams, compteurs de mails et quota Claude sans contenir aucune clé : l'APK doit pouvoir être publié tel quel, et un téléphone perdu ne doit rien exposer d'autre qu'un accès en lecture au résumé, révocable.

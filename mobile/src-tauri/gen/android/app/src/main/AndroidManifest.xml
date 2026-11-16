@@ -1,15 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Only INTERNET (relay) and CAMERA (QR scan, added by the barcode-scanner plugin). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Pulled in by libraries, not needed: the scanner's vibrate command is never called, and
+         network state only serves ML Kit's usage telemetry, removed below. -->
+    <uses-permission android:name="android.permission.VIBRATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
-    <!-- AndroidTV support -->
-    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <!-- Android 11+ hides user-installed apps (Notion, Claude…) unless declared. The targets are
+         configurable, so: every launchable app (not QUERY_ALL_PACKAGES, which is not a permission here). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
 
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.nexus_mobile"
-        android:usesCleartextTraffic="${usesCleartextTraffic}">
+        android:usesCleartextTraffic="${usesCleartextTraffic}"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:replace="android:allowBackup">
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
@@ -19,8 +36,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <!-- AndroidTV support -->
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -33,5 +48,7 @@
             android:name="android.support.FILE_PROVIDER_PATHS"
             android:resource="@xml/file_paths" />
         </provider>
+        <!-- No telemetry backend: ML Kit (QR scanner) can't upload usage stats to Google. -->
+        <service android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery" tools:node="remove" />
     </application>
 </manifest>

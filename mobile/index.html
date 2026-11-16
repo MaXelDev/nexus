@@ -9,16 +9,37 @@
 <div class="bg" aria-hidden="true"></div>
 <div id="spin" class="spin" aria-hidden="true"></div>
 <main id="app" class="stack">
-  <p id="status" class="status" role="status" hidden></p>
-  <button id="notion" class="nx-glass nx-btn nx-card notion" type="button" data-open="notion" aria-label="Ouvrir Notion"></button>
-  <button id="weather" class="nx-glass nx-btn nx-card weather" type="button" data-open="weather" aria-label="Ouvrir la météo"></button>
-  <section id="trams" class="nx-glass trams" aria-label="Prochains trams"></section>
+  <button id="status" class="status" type="button" hidden></button>
+  <button id="notion" hidden class="nx-glass nx-btn nx-card notion" type="button" data-open="notion" aria-label="Ouvrir Notion"></button>
+  <button id="weather" hidden class="nx-glass nx-btn nx-card weather" type="button" data-open="weather" aria-label="Ouvrir la météo"></button>
+  <section id="trams" hidden class="nx-glass trams" aria-label="Prochains trams"></section>
   <div class="row">
-    <section id="mails" class="nx-glass small" aria-label="Mails"></section>
-    <section id="claude" class="nx-glass small" aria-label="Utilisation Claude"></section>
+    <section id="mails" hidden class="nx-glass small" aria-label="Mails"></section>
+    <section id="claude" hidden class="nx-glass small" aria-label="Utilisation Claude"></section>
   </div>
   <nav id="dock" class="nx-glass dock" aria-label="Raccourcis"></nav>
+  <button id="open-settings" class="link" type="button">Réglages</button>
 </main>
+<div id="settings" class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+  <section class="nx-glass panel">
+    <h2 id="settings-title">Réglages</h2>
+    <div id="paired" hidden>
+      <div class="muted">Relais</div>
+      <div id="relay-host" class="value"></div>
+      <button id="forget" class="nx-pill nx-btn action danger" type="button">Oublier ce téléphone</button>
+      <p class="muted">Révoque son accès au relais et efface le jeton de ce téléphone.</p>
+    </div>
+    <form id="unpaired" hidden>
+      <p class="muted">Sur le PC, lance <b>nexus --pair</b> : un QR s'affiche pendant 60 s.</p>
+      <label class="muted" for="device">Nom de ce téléphone</label>
+      <input id="device" class="nx-pill field" maxlength="40" required autocomplete="off" placeholder="Galaxy S22"
+        pattern="[\p{L}\p{N} _'.\-]{1,40}">
+      <button class="nx-pill nx-btn action" type="submit">Scanner le QR</button>
+    </form>
+    <p id="settings-msg" class="msg" role="status"></p>
+    <button id="close-settings" class="link" type="button">Fermer</button>
+  </section>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

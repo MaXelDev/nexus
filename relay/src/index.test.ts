@@ -181,6 +181,22 @@ test("pairing: admin creates a one-time code, the phone trades it for a working 
   assert.equal((await post("/v1/pair/claim", { code: "A".repeat(22), device: "X" }, undefined, e)).status, 401);
 });
 
+test("a device revokes itself, and only itself", async () => {
+  const e = await pcEnv();
+  const claim = async (device: string) => {
+    const code = (await (await post("/v1/pair", {}, ADMIN, e)).json() as any).code;
+    return (await (await post("/v1/pair/claim", { code, device }, undefined, e)).json() as any).token as string;
+  };
+  const [a, b] = [await claim("Phone A"), await claim("Phone B")];
+  const del = (t?: string) => call("/v1/device", { method: "DELETE", ...(t ? auth(t) : {}) }, e);
+  assert.equal((await del()).status, 401);
+  assert.equal((await del(PUSH)).status, 401);
+  assert.equal((await del(a)).status, 204);
+  assert.equal((await call("/v1/summary", auth(a), e)).status, 401, "revoked");
+  assert.equal((await call("/v1/summary", auth(b), e)).status, 200, "the other phone still works");
+  assert.equal(store.get("devname:Phone A"), undefined, "name is free again");
+});
+
 test("pairing: a taken name is 409 and leaves the code usable", async () => {
   const e = await pcEnv();
   const code1 = (await (await post("/v1/pair", {}, ADMIN, e)).json() as any).code;

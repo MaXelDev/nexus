@@ -1,5 +1,5 @@
 # ADR 0006 — Jeton du téléphone dans l'Android Keystore
-Statut : proposé (2026-11-15)
+Statut : accepté (2026-11-15)
 
 ## Contexte
 Le seul secret du téléphone est le jeton `nxd_…`. Il doit être chiffré par une clé matérielle non exportable, ne jamais partir en sauvegarde, et ne jamais être visible (écran, logs, webview).

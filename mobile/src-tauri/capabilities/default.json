@@ -1,7 +1,13 @@
 {
   "$schema": "../gen/schemas/mobile-schema.json",
   "identifier": "default",
-  "description": "The single NEXUS screen: core events only (relay and intents arrive in step 6).",
+  "description": "The single NEXUS screen. Nothing grants the `nexus` plugin: only Rust reads the Keystore.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "barcode-scanner:allow-scan",
+    "barcode-scanner:allow-cancel",
+    "barcode-scanner:allow-check-permissions",
+    "barcode-scanner:allow-request-permissions"
+  ]
 }

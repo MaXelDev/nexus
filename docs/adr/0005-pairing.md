@@ -1,5 +1,5 @@
 # ADR 0005 — Appairage du téléphone par QR
-Statut : proposé (2026-11-15)
+Statut : accepté (2026-11-15)
 
 ## Contexte
 Le téléphone a besoin d'un jeton de lecture, sans qu'aucun jeton ne soit jamais affiché, copié ni tapé. NEXUS PC doit aussi envoyer le quota Claude sans pouvoir lire le résumé.
