@@ -19,6 +19,14 @@ D : pas de plugin maintenu qui fasse exactement ça sans biométrie ni statut al
 
 Appareil cible : Samsung S22, One UI 8 (Android 16) ; minSdk 26, targetSdk 36. StrongBox utilisé s'il est présent, repli TEE sinon.
 
+## Mise en œuvre (étapes 6 à 8)
+- Plugin : `mobile/src-tauri/gen/android/app/src/main/java/io/github/nexus/mobile/NexusPlugin.kt` (`save`, `load`, `clear`, `open`, `secure`), enregistré par `mobile/src-tauri/src/lib.rs`. Aucune capability ne l'accorde à la webview : `invoke("plugin:nexus|load")` depuis la page est refusé (vérifié sur l'appareil).
+- Le Keystore chiffre `{relay, token}` en JSON ; `SharedPreferences` ne contient que `iv + texte chiffré` en base64.
+- Ouvrir une appli : `getLaunchIntentForPackage` (intent explicite, comme un lanceur) + `<queries>` sur les intents `MAIN/LAUNCHER`. Sans `<queries>`, Android 11+ cache les applis installées par l'utilisateur (Notion, Claude) ; un intent implicite rate les activités sans catégorie `DEFAULT` (Notion). Appli absente → sa page Play Store.
+- Permissions finales : `INTERNET`, `CAMERA`, et `ACCESS_NETWORK_STATE` exigée par ML Kit (lecteur de QR). `VIBRATE` (commande du scanner jamais appelée) est retirée du manifeste fusionné. La télémétrie de ML Kit reste : la retirer le faisait planter.
+- Release minifiée (R8) : règles `-keep` pour ML Kit dans `proguard-rules.pro`, sinon plantage à la première image de la caméra. La permission caméra est demandée avant le scan (le plugin échoue sinon).
+- Network security config : HTTPS seulement et CA système seulement en release ; le build debug autorise le clair pour `tauri android dev`.
+
 ## Conséquences
 - Plus facile : aucune dépendance alpha ; ouverture instantanée sans biométrie.
 - Plus difficile : code Kotlin à maintenir et à tester sur l'appareil réel.
