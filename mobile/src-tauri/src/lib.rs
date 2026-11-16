@@ -107,16 +107,6 @@ fn open<R: Runtime>(app: AppHandle<R>, target: String) -> Result<(), String> {
     native::<R, Value>(&app, "open", json!({ "target": target })).map(|_| ())
 }
 
-/// True once the phone is unlocked: settings (forget, pair) are never reachable from the lock screen.
-#[tauri::command(async)]
-fn unlock<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
-    #[derive(Deserialize)]
-    struct Unlocked {
-        ok: bool,
-    }
-    native::<R, Unlocked>(&app, "unlock", ()).map(|u| u.ok)
-}
-
 #[tauri::command(async)]
 fn secure<R: Runtime>(app: AppHandle<R>, on: bool) -> Result<(), String> {
     native::<R, Value>(&app, "secure", json!({ "on": on })).map(|_| ())
@@ -160,7 +150,7 @@ pub fn run() {
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_barcode_scanner::init());
     builder
-        .invoke_handler(tauri::generate_handler![summary, paired_relay, pair, forget, open, secure, unlock])
+        .invoke_handler(tauri::generate_handler![summary, paired_relay, pair, forget, open, secure])
         .run(tauri::generate_context!())
         .expect("error while running NEXUS");
 }

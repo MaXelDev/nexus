@@ -124,7 +124,7 @@ Wayland does not let an app blur what is behind its window, so by default NEXUS 
 
 <img src="docs/screenshot-android.png" alt="NEXUS Android showing demo data" width="300" align="right">
 
-A one-screen companion for the phone: Notion, weather, trams, mail counts, Claude usage and three shortcuts, in the same glass style. Every block opens its app: Notion, the weather page, Gmail, Claude, the camera, Bitwarden Authenticator, Google Wallet. It also shows over the lock screen: the camera then opens in secure mode, while other apps and the settings ask you to unlock first. It never holds an API key: it talks to **nexus-relay**, a small Cloudflare Worker you deploy on your own free account, and stores a single read-only token.
+A one-screen companion for the phone: Notion, weather, trams, mail counts, Claude usage and three shortcuts, in the same glass style. Every block opens its app: Notion, the weather page, Gmail, Claude, the camera, Bitwarden Authenticator, Google Wallet. It never holds an API key: it talks to **nexus-relay**, a small Cloudflare Worker you deploy on your own free account, and stores a single read-only token.
 
 ```
 Phone ──(1 revocable token)──▶ nexus-relay (Cloudflare Worker) ──▶ Notion, Gmail, IMAP, TCL, Open-Meteo, Claude quota

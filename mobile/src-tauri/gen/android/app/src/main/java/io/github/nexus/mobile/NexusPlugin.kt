@@ -4,7 +4,6 @@ package io.github.nexus.mobile
 // opens other apps, and toggles FLAG_SECURE. Called from Rust only (src-tauri/src/lib.rs): no capability
 // grants these commands to the webview, so the page can never read the stored token.
 import android.app.Activity
-import android.app.KeyguardManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -99,10 +98,7 @@ class NexusPlugin(private val activity: Activity) : Plugin(activity) {
     fun open(invoke: Invoke) {
         val t = invoke.parseArgs(OpenArgs::class.java).target
         // User-installed apps are only reachable thanks to <queries> in AndroidManifest.xml.
-        val locked = (activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked
         val intent = when {
-            // Over the lock screen: the secure camera opens without unlocking (other apps ask for it).
-            t == "camera" && locked -> Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA_SECURE)
             t == "camera" -> Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
             t.startsWith("https://") -> Intent(Intent.ACTION_VIEW, Uri.parse(t))
             // Explicit intent, as a launcher does: an implicit MAIN/LAUNCHER intent misses apps whose
@@ -121,21 +117,6 @@ class NexusPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
         invoke.resolve()
-    }
-
-    /** Resolves {ok: true} once the phone is unlocked (asks for the PIN/biometrics if the lock screen is up). */
-    @Command
-    fun unlock(invoke: Invoke) {
-        val km = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        val result = { ok: Boolean -> invoke.resolve(JSObject().put("ok", ok)) }
-        if (!km.isKeyguardLocked) return result(true)
-        activity.runOnUiThread {
-            km.requestDismissKeyguard(activity, object : KeyguardManager.KeyguardDismissCallback() {
-                override fun onDismissSucceeded() = result(true)
-                override fun onDismissCancelled() = result(false)
-                override fun onDismissError() = result(false)
-            })
-        }
     }
 
     /** FLAG_SECURE while the settings screen is shown: no screenshot, hidden in the recent apps. */

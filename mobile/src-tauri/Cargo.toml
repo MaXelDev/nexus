@@ -1,6 +1,6 @@
 [package]
 name = "nexus-mobile"
-version = "0.1.0"
+version = "0.2.0"
 description = "NEXUS for Android: a read-only summary from nexus-relay"
 license = "MIT"
 edition = "2021"

@@ -230,7 +230,6 @@ const msg = (t: string) => { $("settings-msg").textContent = t; };
 
 async function openSettings() {
   if (!$("settings").hidden) return;
-  if (inTauri && !(await invoke<boolean>("unlock").catch(() => false))) return; // shown over the lock screen
   history.pushState({ settings: true }, "");
   invoke("secure", { on: true }).catch(() => {});
   msg("");
