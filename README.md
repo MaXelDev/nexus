@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8AB4F8)](LICENSE)
 [![Fedora 44](https://img.shields.io/badge/Fedora-44-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/workstation/)
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white)](https://v2.tauri.app/)
+[![Android](https://img.shields.io/badge/Android-8%2B-3DDC84?logo=android&logoColor=white)](#android-app-optional)
 
 ![NEXUS showing demo data](docs/screenshot.png)
 
@@ -22,6 +23,7 @@
 - **Claude usage**: 5-hour session and weekly quotas of your Claude plan.
 - **Light on resources**: nothing refreshes while the dashboard is hidden. In our measurements it used about 150 MB of RAM and under 0.1 % CPU.
 - **Your secrets stay in the GNOME keyring**, never in a file.
+- **Optional Android app**: the same summary on your phone, through a relay you host on your own free Cloudflare account. No API key on the phone. See [Android app](#android-app-optional).
 
 Every card is optional: remove its section from the config and it disappears.
 
@@ -120,7 +122,9 @@ Wayland does not let an app blur what is behind its window, so by default NEXUS 
 
 ## Android app (optional)
 
-A one-screen companion for the phone: Notion, weather, trams, mail counts, Claude usage and three shortcuts, in the same glass style. It never holds an API key: it talks to **nexus-relay**, a small Cloudflare Worker you deploy on your own free account, and stores a single read-only token.
+<img src="docs/screenshot-android.png" alt="NEXUS Android showing demo data" width="300" align="right">
+
+A one-screen companion for the phone: Notion, weather, trams, mail counts, Claude usage and three shortcuts, in the same glass style. Every block opens its app: Notion, the weather page, Gmail, Claude, the camera, Google Wallet. It never holds an API key: it talks to **nexus-relay**, a small Cloudflare Worker you deploy on your own free account, and stores a single read-only token.
 
 ```
 Phone ──(1 revocable token)──▶ nexus-relay (Cloudflare Worker) ──▶ Notion, Gmail, IMAP, TCL, Open-Meteo, Claude quota
@@ -128,9 +132,11 @@ NEXUS PC ──(separate write token)──▶ nexus-relay  (sends the Claude qu
 ```
 
 - The token is encrypted with a key that never leaves the Android Keystore (StrongBox when available). Only Rust code reads it: the web page never sees it.
-- No Google backup, no device-to-device transfer, HTTPS only, no screenshots of the settings screen. Permissions: Internet and camera (to scan the pairing QR).
+- No Google backup, no device-to-device transfer, HTTPS only, no screenshots of the settings screen. Permissions: Internet and camera (to scan the pairing QR), plus network state, which Google ML Kit (the QR reader) requires.
 - Data refreshes when the app opens, when it comes back to the foreground, and when you pull down. It never refreshes in the background.
-- Design and API: `docs/adr/0004`–`0007`, `docs/relay-api.md`.
+- Design and API: `docs/adr/0004`–`0007`, `docs/relay-api.md`. Mockup: `docs/maquette-android.html`.
+
+<br clear="right">
 
 ### 1. Deploy the relay
 
