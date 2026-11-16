@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] — 2026-11-16
+
+- Optional Android companion app and its Cloudflare relay (`relay/`, `mobile/`, README "Android app"). The phone holds no API key, only a revocable read-only token.
+- With a `[relay]` section, NEXUS PC sends the Claude quota to the relay, and `nexus --pair` shows a one-time pairing QR for 60 s.
+- Every network call now times out after 15 s.
+
 ## [1.1.0] — 2026-11-15
 
 - Installing the `.rpm` is now enough: it starts NEXUS in the open session and at every login, and NEXUS creates its GNOME shortcut (Super + the key above Tab) on first start.

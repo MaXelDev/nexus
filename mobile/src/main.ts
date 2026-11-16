@@ -192,7 +192,8 @@ async function refresh() {
 }
 
 // ---------- interactions ----------
-const LINKS: Record<string, string> = { camera: "camera" }; // the rest comes from the relay config
+// Defaults, so the dock works before pairing; the relay config (`[android]`) overrides them.
+const LINKS: Record<string, string> = { camera: "camera", claude: "com.anthropic.claude", wallet: "com.google.android.apps.walletnfcrel" };
 
 function onOpen(key: string) {
   const target = data?.links[key] ?? LINKS[key];

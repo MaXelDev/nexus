@@ -11,6 +11,10 @@ NEXUS_KEYSTORE_PASSWORD="$(secret-tool lookup service nexus key android_keystore
   || { echo "Mot de passe de la clé absent du trousseau" >&2; exit 1; }
 export NEXUS_KEYSTORE_PASSWORD
 
+# Rust embeds source paths (panic messages): replace the home folder so the user name isn't in the APK.
+# RUSTFLAGS overrides Tauri's per-target flags, so its link args are repeated here.
+export RUSTFLAGS="--remap-path-prefix=$HOME=/build -Clink-arg=-landroid -Clink-arg=-llog -Clink-arg=-lOpenSLES"
+
 version=$(python3 -c 'import json;print(json.load(open("mobile/src-tauri/tauri.conf.json"))["version"])')
 (cd mobile && npx tauri android build --apk --target aarch64)
 unset NEXUS_KEYSTORE_PASSWORD
