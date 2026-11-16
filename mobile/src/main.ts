@@ -8,7 +8,7 @@ import "@fontsource/space-grotesk/latin-500.css";
 import "@fontsource/space-grotesk/latin-600.css";
 import "./style.css";
 import { invoke } from "@tauri-apps/api/core";
-import { Format, scan } from "@tauri-apps/plugin-barcode-scanner";
+import { cancel, checkPermissions, Format, requestPermissions, scan } from "@tauri-apps/plugin-barcode-scanner";
 import { ago, esc, examWhen, healthLabel, pad, tramRows, wmo, type Dep } from "../../src/format";
 import { ICON, svg, WX_ICON } from "../../src/icons";
 
@@ -251,17 +251,31 @@ async function showPairState() {
 $("open-settings").addEventListener("click", openSettings);
 $("status").addEventListener("click", () => (unpaired ? openSettings() : refresh()));
 $("close-settings").addEventListener("click", () => history.back());
-addEventListener("popstate", () => { if (!$("settings").hidden) closeSettings(); });
+let scanning = false;
+addEventListener("popstate", () => {
+  if (scanning) { // Android back during a scan: stop the camera, stay in the settings
+    cancel().catch(() => {});
+    history.pushState({ settings: true }, "");
+    return;
+  }
+  if (!$("settings").hidden) closeSettings();
+});
 
 $("unpaired").addEventListener("submit", async (e) => {
   e.preventDefault();
   const device = ($("device") as HTMLInputElement).value.trim();
   msg("");
+  // The scanner fails at once unless the camera permission was granted beforehand.
+  if ((await checkPermissions()) !== "granted" && (await requestPermissions()) !== "granted")
+    return msg("NEXUS a besoin de l'appareil photo pour lire le QR : autorise-le dans Paramètres › Applis › NEXUS › Autorisations.");
   let link: string;
+  scanning = true;
   try {
     link = (await scan({ formats: [Format.QRCode] })).content;
   } catch {
-    return msg("Scan annulé. Autorise l'appareil photo si Android le demande.");
+    return msg("Scan annulé.");
+  } finally {
+    scanning = false;
   }
   try {
     msg("Appairage…");
