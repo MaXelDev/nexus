@@ -29,6 +29,7 @@ const isErr = (v: unknown): v is Err => !!v && typeof v === "object" && "error" 
 let data: Summary | null = null;
 let failedAt: number | null = null;
 let unpaired = false;
+let stale: string[] = []; // sections showing their last good value because the source is down
 
 // ---------- render ----------
 function renderNotion(n: Summary["notion"]) {
@@ -44,7 +45,7 @@ function renderNotion(n: Summary["notion"]) {
     ? `<div class="nx-pill exam"><div class="muted">Prochain DS</div><div class="name">${esc(n.exam.title)}</div>
         <div class="when">${esc(shortDay(examWhen(n.exam.date)))}</div></div>`
     : `<div class="nx-pill exam"><div class="muted">Prochain DS</div><div class="name">Aucun</div></div>`;
-  const h = n.health;
+  const h = n.health && { ...n.health, score: Math.round(Number(n.health.score)) || 0 }; // numbers only in the markup
   const health = h
     ? `<div class="nx-pill health"><div class="ring" style="background:conic-gradient(#8AB4F8 0 ${h.score}%, rgba(255,255,255,0.10) ${h.score}% 100%)">
         <div>${h.score}</div></div><div><div class="muted">Santé</div><div class="label">${healthLabel(h.score)}</div></div></div>`
@@ -60,7 +61,7 @@ function renderWeather(w: Summary["weather"]) {
   card.hidden = w === null;
   if (!w || isErr(w)) return void (card.innerHTML = `${svg(ICON.cloudSun, 30, 1.6)}<div class="error">Météo indisponible</div>`);
   const [label, icon] = wmo(w.code, w.is_day);
-  const rain = w.rain === null ? "" : ` · pluie ${w.rain} %`;
+  const rain = w.rain === null ? "" : ` · pluie ${Math.round(Number(w.rain))} %`;
   card.innerHTML = `${svg(WX_ICON[icon], 30, 1.6)}<div class="temp">${Math.round(w.temp)}°</div>
     <div class="wx">${label}<br><span class="muted">${Math.round(w.min)}° / ${Math.round(w.max)}°${rain}</span></div>
     <span class="aside">${esc(w.place)}</span>`;
@@ -86,8 +87,8 @@ function renderMails(m: Summary["mail"]) {
   const head = `<h2>${svg(ICON.mail, 15, 1.9)}Mails</h2>`;
   if (!m || isErr(m)) return void (card.innerHTML = `${head}<div class="error">Indisponible</div>`);
   const tile = (cls: string, n: number, k: string) =>
-    `<button class="nx-pill nx-btn tile ${cls}" type="button" data-open="mail" aria-label="Ouvrir Gmail : ${n} ${k.toLowerCase()}">
-      <span class="n">${n}</span><span class="k">${k}</span></button>`;
+    `<button class="nx-pill nx-btn tile ${cls}" type="button" data-open="mail" aria-label="Ouvrir Gmail : ${Number(n) || 0} ${k.toLowerCase()}">
+      <span class="n">${Number(n) || 0}</span><span class="k">${k}</span></button>`;
   card.innerHTML = `${head}<div class="tiles">${tile("urgent", m.urgent, "Urgent")}${tile("todo", m.a_traiter, "À traiter")}</div>`;
 }
 
@@ -114,8 +115,9 @@ function renderDock() {
 
 function renderStatus() {
   const s = $("status");
-  s.hidden = failedAt === null && !unpaired;
+  s.hidden = failedAt === null && !unpaired && !stale.length;
   if (unpaired) s.textContent = "Téléphone non appairé · Réglages";
+  else if (failedAt === null && stale.length) s.textContent = `${stale.join(", ")} : source indisponible, dernière valeur affichée`;
   else if (data && failedAt !== null) {
     const d = new Date(data.generated_at);
     s.textContent = `Relais injoignable · données de ${pad(d.getHours())}h${pad(d.getMinutes())}`;
@@ -135,6 +137,7 @@ function render() {
 
 // ---------- data ----------
 const CACHE = "nx-summary";
+const LABEL = { notion: "Notion", weather: "Météo", board: "Trams", mail: "Mails" };
 
 const inTauri = "__TAURI_INTERNALS__" in window;
 
@@ -167,7 +170,11 @@ async function refresh() {
   try {
     const fresh = await fetchSummary();
     // A source down keeps its last good value (the relay sends {error} for it).
-    if (data) for (const k of ["notion", "weather", "board", "mail"] as const) if (isErr(fresh[k]) && !isErr(data[k])) (fresh as any)[k] = data[k];
+    stale = [];
+    for (const k of ["notion", "weather", "board", "mail"] as const) {
+      const old = data?.[k];
+      if (isErr(fresh[k]) && old && !isErr(old)) { (fresh as any)[k] = old; stale.push(LABEL[k]); }
+    }
     data = fresh;
     failedAt = null;
     unpaired = false;

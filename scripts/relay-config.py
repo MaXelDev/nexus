@@ -17,7 +17,7 @@ android = cfg.get("android", {})
 out = {
     "tz": android.get("timezone", "Europe/Paris"),
     "weather": cfg.get("weather"),
-    "transport": cfg.get("transport"),
+    "transport": {"provider": "tcl", **cfg["transport"]} if cfg.get("transport") else None,  # same default as the PC
     "notion": cfg.get("notion"),
     "gmail": {"urgent": gmail["urgent"], "todo": gmail["todo"]} if gmail else None,
     "links": {

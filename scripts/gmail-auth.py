@@ -72,7 +72,9 @@ if RELAY:
                         ("GMAIL_REFRESH_TOKEN", tok["refresh_token"])):
         r = subprocess.run(["npx", "-y", "wrangler@4", "secret", "put", name], cwd=RELAY_DIR, input=value,
                            text=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"{name} : " + ("envoyé au relais" if r.returncode == 0 else "ÉCHEC (wrangler login ?)"))
+        if r.returncode:
+            sys.exit(f"{name} : ÉCHEC (wrangler login ?). Relance scripts/gmail-auth.py --relay")
+        print(f"{name} : envoyé au relais")
 else:
     subprocess.run(["secret-tool", "store", "--label=nexus gmail_refresh_token", "service", "nexus", "key", "gmail_refresh_token"],
                    input=tok["refresh_token"], text=True, check=True)

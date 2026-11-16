@@ -343,17 +343,20 @@ function open() {
 }
 // ---------- pairing (`nexus --pair`) ----------
 let pairTimer = 0;
+let pairRun = 0; // only the latest `nexus --pair` drives the panel
 function endPair() {
   clearInterval(pairTimer);
   $("pair").hidden = true;
   $("pair-qr").innerHTML = ""; // the code is useless after 60 s, but don't keep it around
 }
 async function startPair() {
+  const run = ++pairRun;
   endPair();
   $("pair").hidden = false;
   $("pair-msg").textContent = "Demande d'un code au relais…";
   try {
     const p = await invoke<{ svg: string; expires_in: number }>("pair");
+    if (run !== pairRun) return;
     $("pair-qr").innerHTML = p.svg; // SVG built by the backend's QR encoder, no outside markup
     let left = p.expires_in;
     const tick = () => {
@@ -363,12 +366,14 @@ async function startPair() {
     tick();
     pairTimer = window.setInterval(tick, 1000);
   } catch (err) {
+    if (run !== pairRun) return;
     $("pair-msg").textContent = `Appairage impossible : ${err}`;
     pairTimer = window.setTimeout(endPair, 8000);
   }
 }
 
 async function close() {
+  pairRun++; // a pending pairing request must not reopen the panel
   endPair();
   if (closing) return;
   closing = true;

@@ -25,6 +25,18 @@ android {
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
+    // Release signing: scripts/android-release.sh exports the keystore path (outside the repo) and its
+    // password (from the GNOME keyring). Without them the release APK is left unsigned.
+    val keystore = System.getenv("NEXUS_KEYSTORE")
+    signingConfigs {
+        if (keystore != null) create("release") {
+            storeFile = file(keystore)
+            storeType = "PKCS12"
+            storePassword = System.getenv("NEXUS_KEYSTORE_PASSWORD")
+            keyAlias = "nexus"
+            keyPassword = System.getenv("NEXUS_KEYSTORE_PASSWORD")
+        }
+    }
     buildTypes {
         getByName("debug") {
             manifestPlaceholders["usesCleartextTraffic"] = "true"
@@ -39,6 +51,7 @@ android {
             }
         }
         getByName("release") {
+            if (keystore != null) signingConfig = signingConfigs.getByName("release")
             optimization {
                enable = true
             }

@@ -118,6 +118,75 @@ Wayland does not let an app blur what is behind its window, so by default NEXUS 
 - **Add a transport network**: in `src-tauri/src/transport.rs`, write a `fetch_<provider>` function that returns `Vec<Departure>` and add it to the `match` in `fetch`. Then set `provider = "<name>"` in the config.
 - **Add a mail provider**: add a variant to `MailKind` in `src-tauri/src/config.rs` and handle it in `src-tauri/src/mail.rs`.
 
+## Android app (optional)
+
+A one-screen companion for the phone: Notion, weather, trams, mail counts, Claude usage and three shortcuts, in the same glass style. It never holds an API key: it talks to **nexus-relay**, a small Cloudflare Worker you deploy on your own free account, and stores a single read-only token.
+
+```
+Phone ──(1 revocable token)──▶ nexus-relay (Cloudflare Worker) ──▶ Notion, Gmail, IMAP, TCL, Open-Meteo, Claude quota
+NEXUS PC ──(separate write token)──▶ nexus-relay  (sends the Claude quota)
+```
+
+- The token is encrypted with a key that never leaves the Android Keystore (StrongBox when available). Only Rust code reads it: the web page never sees it.
+- No Google backup, no device-to-device transfer, HTTPS only, no screenshots of the settings screen. Permissions: Internet and camera (to scan the pairing QR).
+- Data refreshes when the app opens, when it comes back to the foreground, and when you pull down. It never refreshes in the background.
+- Design and API: `docs/adr/0004`–`0007`, `docs/relay-api.md`.
+
+### 1. Deploy the relay
+
+You need a Cloudflare account (the free plan is enough) and NEXUS PC already configured. The IMAP counts come from another Worker of yours through a service binding: if you have none, delete the `[[services]]` block in `relay/wrangler.toml` first (Gmail counts still work).
+
+```bash
+cd relay && npm install && npx wrangler login && npx wrangler deploy && cd ..
+scripts/relay-setup.sh      # PC tokens, copies of your keyring secrets, Gmail (labels only), config
+```
+
+Then add the relay to `~/.config/nexus/config.toml` and restart NEXUS:
+
+```toml
+[relay]
+url = "https://nexus-relay.<you>.workers.dev"
+```
+
+The phone's buttons are set in an optional `[android]` section (`notion`, `mail`, `claude`, `wallet`: app package names; `weather_url`: a forecast page; `place`). Re-run `scripts/relay-setup.sh config` after any change.
+
+### 2. Install the APK
+
+Download `nexus-android-v*.apk` from the release and check its SHA-256. Then either:
+
+- **USB**: enable USB debugging on the phone and run `adb install nexus-android-v*.apk`, or
+- **File transfer**: copy the APK to the phone, open it, and allow "Install unknown apps" for your file manager when Android asks.
+
+### 3. Pair the phone
+
+1. On the PC, run `nexus --pair`. A QR code appears for 60 seconds.
+2. On the phone, open NEXUS → **Réglages**, enter a name for the phone, then tap **Scanner le QR**.
+
+The QR holds a one-time code, not a token: once it is used or expires, it is worthless.
+
+### Lost or stolen phone
+
+On the PC, list the paired phones, then revoke the lost one:
+
+```bash
+scripts/relay-revoke.sh                 # list paired phones
+scripts/relay-revoke.sh "Galaxy S22"    # revoke it: its token is refused within a minute
+```
+
+That is all: the phone only had a read-only token, and no API key ever left Cloudflare. **Réglages → Oublier ce téléphone** does the same from the phone itself (for example before selling it).
+
+### Build the APK yourself
+
+You need JDK 21, the Android SDK (platform 36, build-tools 36) and NDK, and the Rust target `aarch64-linux-android`. `scripts/android-env.sh` assumes a user-level install (JDK in `~/.local/share/jdk`, SDK in `~/Android/Sdk`).
+
+```bash
+source scripts/android-env.sh
+cd mobile && npx tauri android build --debug --apk --target aarch64   # debug build
+scripts/android-release.sh                                            # signed release → dist/
+```
+
+`android-release.sh` signs with a key in `~/.config/nexus/android/nexus-release.p12`, whose password is in the GNOME keyring (`service nexus key android_keystore_password`). **Back up both**: without that key, you cannot update the installed app, only uninstall and reinstall it.
+
 ## Development
 
 ```bash
@@ -166,3 +235,5 @@ NEXUS est un tableau de bord plein écran pour Fedora GNOME (Wayland). Il reste 
 Il regroupe l'horloge, vos applications, des commandes WezTerm, la météo, les prochains passages des transports, Notion, vos mails Gmail et IMAP, et votre quota Claude.
 
 Les secrets restent dans le trousseau GNOME, et toute la configuration est dans `~/.config/nexus/config.toml`. Installation : `sudo dnf install ./nexus-*.rpm`, c'est tout.
+
+Une appli Android (APK) optionnelle affiche le même résumé sur le téléphone via un relais Cloudflare personnel : aucune clé d'API sur le téléphone, un seul jeton en lecture seule, révocable avec `scripts/relay-revoke.sh` en cas de perte (voir « Android app »).

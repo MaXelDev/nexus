@@ -34,6 +34,9 @@ fi
 
 if [[ $part == all || $part == copy ]]; then
   for key in notion_token grandlyon_user grandlyon_password; do
+    if ! secret-tool lookup service nexus key "$key" >/dev/null 2>&1; then
+      echo "$key : absent du trousseau, ignoré (carte correspondante masquée)"; continue
+    fi
     secret-tool lookup service nexus key "$key" | tr -d '\n' | put "$(tr a-z A-Z <<<"$key")"
   done
 fi

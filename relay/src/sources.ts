@@ -26,10 +26,10 @@ export async function board(c: NonNullable<Config["transport"]>, env: Env) {
   if (c.provider !== "tcl") throw new Error(`transport: provider ${c.provider}`);
   const auth = "Basic " + btoa(`${env.GRANDLYON_USER}:${env.GRANDLYON_PASSWORD}`);
   const departures = [];
-  for (const id of c.stop_ids) {
-    const v = await getJson("tcl",
-      `https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclpassagearret/all.json?field=id&value=${id}&maxfeatures=100`,
-      { headers: { Authorization: auth } });
+  const stops = await Promise.all(c.stop_ids.map((id) => getJson("tcl",
+    `https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclpassagearret/all.json?field=id&value=${id}&maxfeatures=100`,
+    { headers: { Authorization: auth } })));
+  for (const v of stops) {
     for (const r of v.values ?? []) {
       if (!c.lines?.length || c.lines.includes(r.ligne)) departures.push({ line: r.ligne, direction: r.direction, at: r.heurepassage });
     }
@@ -115,7 +115,8 @@ export async function gmailCounts(c: NonNullable<Config["gmail"]>, env: Env) {
     if (!l) throw new Error("gmail: label not found");
     return (await getJson("gmail", `${api}/${l.id}`, { headers })).messagesTotal as number;
   };
-  return { urgent: await count(c.urgent), a_traiter: await count(c.todo) };
+  const [urgent, a_traiter] = await Promise.all([count(c.urgent), count(c.todo)]);
+  return { urgent, a_traiter };
 }
 
 /** Sum of the configured boxes. One box down = `partial`; all down = error. */

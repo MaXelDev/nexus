@@ -19,7 +19,10 @@ Attention : dans le zsh de l'utilisateur, `install` est un alias de `sudo dnf in
 - `src/` : frontend.
 - `scripts/setup-secrets.sh`, `scripts/check-secrets.sh` : saisie masquée / vérification OK-ERREUR des secrets.
 - `config.example.toml` : config générique commentée ; la vraie config est dans `~/.config/nexus/config.toml`.
-- `docs/` : maquette, PROGRESS.md, ADR.
+- `docs/` : maquettes (PC, Android), PROGRESS.md, ADR (0004-0007 : relais, appairage, Keystore, structure mobile), `relay-api.md`.
+- `relay/` : Worker Cloudflare `nexus-relay` (TypeScript) : seul accès du téléphone aux données ; `npm test`, `npm run check`, `npx wrangler deploy`.
+- `mobile/` : appli Android (2e app Tauri, partage `src/format.ts`, `src/icons.ts`) ; Rust `mobile/src-tauri/src/lib.rs`, plugin Kotlin `.../gen/android/app/src/main/java/io/github/nexus/mobile/NexusPlugin.kt` (Keystore, intents, FLAG_SECURE).
+- `scripts/relay-*.sh|py` : secrets et config du relais, révocation ; `scripts/android-env.sh` (à sourcer), `scripts/android-release.sh` (APK signé).
 
 ## Économie de tokens (graphify)
 - Avant de lire du code pour trouver où/comment : `graphify query "<question>"` (graphe AST du code dans `graphify-out/`, ignoré par git).
@@ -31,6 +34,7 @@ Rust est dans `~/.cargo/bin` (ajouter au PATH si besoin).
 - Build : `npm run tauri build` (→ .rpm) ; frontend seul : `npm run build`.
 - Tests : `cargo test --manifest-path src-tauri/Cargo.toml` (un test : ajouter son nom ; boîtes mail réelles : `live_mail -- --ignored --nocapture`) et `npm test` (helpers de `src/format.ts`).
 - Secrets : `NEXUS_IMAP_HOST=… scripts/check-secrets.sh`.
+- Android : `source scripts/android-env.sh && cd mobile && npx tauri android build --debug --apk --target aarch64`, puis `adb install -r …/app-universal-debug.apk` ; tests Rust mobile : `cd mobile/src-tauri && cargo test`.
 - Aperçu navigateur avec données de démo (`src/demo.ts`) : `npm run dev` ; capture : `firefox --headless --screenshot out.png --window-size=1920,1080 http://localhost:1420/` (Playwright n'a pas de navigateur).
 
 ## Comportement clé
