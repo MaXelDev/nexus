@@ -3,10 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Only INTERNET (relay) and CAMERA (QR scan, added by the barcode-scanner plugin). -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Pulled in by libraries, not needed: the scanner's vibrate command is never called, and
-         network state only serves ML Kit's usage telemetry, removed below. -->
+    <!-- Pulled in by the scanner, never used: its vibrate command is never called. ML Kit's
+         ACCESS_NETWORK_STATE and telemetry service stay: without them it crashes on the first frame. -->
     <uses-permission android:name="android.permission.VIBRATE" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
     <!-- Android 11+ hides user-installed apps (Notion, Claude…) unless declared. The targets are
          configurable, so: every launchable app (not QUERY_ALL_PACKAGES, which is not a permission here). -->
@@ -48,7 +47,5 @@
             android:name="android.support.FILE_PROVIDER_PATHS"
             android:resource="@xml/file_paths" />
         </provider>
-        <!-- No telemetry backend: ML Kit (QR scanner) can't upload usage stats to Google. -->
-        <service android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery" tools:node="remove" />
     </application>
 </manifest>

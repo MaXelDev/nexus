@@ -32,7 +32,9 @@
     <form id="unpaired" hidden>
       <p class="muted">Sur le PC, lance <b>nexus --pair</b> : un QR s'affiche pendant 60 s.</p>
       <label class="muted" for="device">Nom de ce téléphone</label>
-      <input id="device" class="nx-pill field" maxlength="40" required autocomplete="off" placeholder="Galaxy S22"
+      <!-- No suggestions: Samsung Keyboard otherwise restarts its composing word and eats the first letter. -->
+      <input id="device" class="nx-pill field" maxlength="40" required autocomplete="off" autocorrect="off" spellcheck="false"
+        autocapitalize="words" placeholder="Galaxy S22"
         pattern="[\p{L}\p{N} _'.\-]{1,40}">
       <button class="nx-pill nx-btn action" type="submit">Scanner le QR</button>
     </form>

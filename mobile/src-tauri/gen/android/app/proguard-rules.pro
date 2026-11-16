@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# ML Kit (QR scanner) builds its internals through reflection: once minified it crashed on the
+# first camera frame (NPE in mlkit_vision_common). Keep it and its Firebase/datatransport plumbing.
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_** { *; }
+-keep class com.google.android.gms.internal.mlkit_common.** { *; }
+-keep class com.google.firebase.components.** { *; }
+-keep class com.google.android.datatransport.** { *; }
