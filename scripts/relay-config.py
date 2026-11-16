@@ -25,6 +25,7 @@ out = {
         "weather": android.get("weather_url", "https://open-meteo.com/"),
         "mail": android.get("mail", "com.google.android.gm"),
         "claude": android.get("claude", "com.anthropic.claude"),
+        "authenticator": android.get("authenticator", "com.bitwarden.authenticator"),
         "wallet": android.get("wallet", "com.google.android.apps.walletnfcrel"),
     },
 }

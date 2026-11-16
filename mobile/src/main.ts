@@ -110,7 +110,7 @@ function renderDock() {
   const btn = (key: string, icon: string, label: string) =>
     `<button class="nx-btn" type="button" data-open="${key}" aria-label="Ouvrir ${label}">
       <span class="ico">${svg(icon, 20)}</span><span class="lbl">${label}</span></button>`;
-  $("dock").innerHTML = btn("claude", ICON.claude, "Claude") + btn("camera", ICON.camera, "Appareil photo") + btn("wallet", ICON.wallet, "Wallet");
+  $("dock").innerHTML = btn("claude", ICON.claude, "Claude") + btn("camera", ICON.camera, "Appareil photo") + btn("authenticator", ICON.shield, "Authenticator") + btn("wallet", ICON.wallet, "Wallet");
 }
 
 function renderStatus() {
@@ -193,7 +193,8 @@ async function refresh() {
 
 // ---------- interactions ----------
 // Defaults, so the dock works before pairing; the relay config (`[android]`) overrides them.
-const LINKS: Record<string, string> = { camera: "camera", claude: "com.anthropic.claude", wallet: "com.google.android.apps.walletnfcrel" };
+const LINKS: Record<string, string> = { camera: "camera", claude: "com.anthropic.claude",
+  authenticator: "com.bitwarden.authenticator", wallet: "com.google.android.apps.walletnfcrel" };
 
 function onOpen(key: string) {
   const target = data?.links[key] ?? LINKS[key];
@@ -229,6 +230,7 @@ const msg = (t: string) => { $("settings-msg").textContent = t; };
 
 async function openSettings() {
   if (!$("settings").hidden) return;
+  if (inTauri && !(await invoke<boolean>("unlock").catch(() => false))) return; // shown over the lock screen
   history.pushState({ settings: true }, "");
   invoke("secure", { on: true }).catch(() => {});
   msg("");

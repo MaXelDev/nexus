@@ -89,10 +89,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Dock */
 .dock { padding: 10px 14px; display: flex; justify-content: space-around; }
-.dock button { background: none; border: none; padding: 2px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 44px; }
+.dock button { background: none; border: none; padding: 2px 2px; display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 44px; }
 .dock .ico { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); }
-.dock .lbl { font-size: 10px; font-weight: 500; color: var(--soft); }
+.dock .lbl { font-size: 10px; font-weight: 500; color: var(--soft); white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) { .stack, .nx-card { transition: none; } }
 .age { font-size: 9px; color: var(--muted); margin-top: -2px; }
